@@ -3,8 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, ShoppingBag, Users, Plus, Trash2, 
-  RefreshCw, Eye, Upload, Edit, X, ShieldCheck, 
-  Check, Lock, LogOut, FileText 
+  RefreshCw, Eye, Upload, Edit, X, Lock, LogOut, FileText 
 } from 'lucide-react';
 
 const AdminPanel = () => {
@@ -114,13 +113,33 @@ const AdminPanel = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      const res = await login(adminPhoneOrEmail, adminPassword);
+      // Identity needs to be trimmed and normalized
+      const identity = adminPhoneOrEmail.trim();
+      const password = adminPassword;
+
+      if (!identity || !password) {
+        setLoginError('Please enter both admin credentials and password.');
+        setLoginLoading(false);
+        return;
+      }
+
+      const res = await login(identity, password);
       if (res.success) {
-        // Successful login will update the user state in Context, causing a rerender
         setAdminPhoneOrEmail('');
         setAdminPassword('');
+        
+        // Verify role === "admin"
+        if (res.user && res.user.role === 'admin') {
+          // Redirect to the admin dashboard
+          navigate('/admin', { replace: true });
+        } else {
+          // If role !== "admin": Show Access Denied
+          // Since they logged in successfully, they are logged in as a buyer.
+          // The next render of AdminPanel will detect user.role !== 'admin' and render the Access Denied overlay.
+          navigate('/admin', { replace: true });
+        }
       } else {
-        setLoginError(res.error || 'Authentication failed. Please check your credentials.');
+        setLoginError(res.error || 'Invalid credentials');
       }
     } catch (err) {
       setLoginError('Server connection failure.');
