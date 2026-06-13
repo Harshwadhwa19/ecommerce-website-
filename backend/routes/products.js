@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const { protect, authorize } = require('../middleware/auth');
-const multer = require('multer');
+const { uploadProducts } = require('../config/cloudinary');
 const path = require('path');
 const fs = require('fs');
 
@@ -19,36 +19,6 @@ const getColorHex = (name) => {
   if (n.includes('olive')) return '#808000';
   return '#000000';
 };
-
-// Configure Multer for Product Image Upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = 'uploads/products/';
-    if (!fs.existsSync(dir)){
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files (jpg, jpeg, png, webp) are allowed!'));
-    }
-  }
-});
 
 // @desc    Get all products (with optional filtering)
 // @route   GET /api/products
@@ -110,13 +80,13 @@ router.get('/:id', async (req, res) => {
 // @desc    Create a new product
 // @route   POST /api/products
 // @access  Private/Admin
-router.post('/', protect, authorize('admin'), upload.array('images', 5), async (req, res) => {
+router.post('/', protect, authorize('admin'), uploadProducts.array('images', 5), async (req, res) => {
   try {
     const { name, brand, type, pricePerPiece, piecesPerBundle, moq, sizes, colors, description, inStock } = req.body;
 
-    // Build the images array from file uploads
+    // Build the images array from Cloudinary uploads
     const imageUrls = req.files 
-      ? req.files.map(file => `/uploads/products/${file.filename}`) 
+      ? req.files.map(file => file.path) 
       : [];
 
     let parsedColors = [];
@@ -174,7 +144,7 @@ router.post('/', protect, authorize('admin'), upload.array('images', 5), async (
 // @desc    Update a product
 // @route   PUT /api/products/:id
 // @access  Private/Admin
-router.put('/:id', protect, authorize('admin'), upload.array('images', 5), async (req, res) => {
+router.put('/:id', protect, authorize('admin'), uploadProducts.array('images', 5), async (req, res) => {
   try {
     let product = await Product.findById(req.params.id);
     if (!product) {
@@ -230,7 +200,7 @@ router.put('/:id', protect, authorize('admin'), upload.array('images', 5), async
 
     // If new images are uploaded, append or replace them
     if (req.files && req.files.length > 0) {
-      const newImageUrls = req.files.map(file => `/uploads/products/${file.filename}`);
+      const newImageUrls = req.files.map(file => file.path);
       updatedFields.images = [...product.images, ...newImageUrls];
     }
 
@@ -258,11 +228,13 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
 
-    // Delete associated images from the filesystem
+    // Delete associated images from the filesystem (for legacy local uploads)
     product.images.forEach(imgUrl => {
-      const filePath = path.join(__dirname, '..', imgUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      if (imgUrl.startsWith('/uploads')) {
+        const filePath = path.join(__dirname, '..', imgUrl);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     });
 

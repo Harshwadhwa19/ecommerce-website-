@@ -2,44 +2,14 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const { protect, authorize } = require('../middleware/auth');
-const multer = require('multer');
+const { uploadScreenshots } = require('../config/cloudinary');
 const path = require('path');
 const fs = require('fs');
-
-// Configure Multer for Payment Screenshot Upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = 'uploads/screenshots/';
-    if (!fs.existsSync(dir)){
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'screenshot-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files (jpg, jpeg, png, webp) are allowed!'));
-    }
-  }
-});
 
 // @desc    Place a new order
 // @route   POST /api/orders
 // @access  Private
-router.post('/', protect, upload.single('screenshot'), async (req, res) => {
+router.post('/', protect, uploadScreenshots.single('screenshot'), async (req, res) => {
   try {
     const { items, totalAmount, deliveryAddress } = req.body;
 
@@ -58,7 +28,7 @@ router.post('/', protect, upload.single('screenshot'), async (req, res) => {
       items: orderItems,
       totalAmount: Number(totalAmount),
       deliveryAddress,
-      paymentScreenshot: `/uploads/screenshots/${req.file.filename}`,
+      paymentScreenshot: req.file.path,
       status: 'Pending'
     });
 
