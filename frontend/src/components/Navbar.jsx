@@ -52,11 +52,6 @@ const Navbar = () => {
           <Link to="/catalogue" style={styles.navLink}>Catalogue</Link>
           <button onClick={() => handleSmoothScroll('brands-section')} style={styles.navLinkBtn}>Brands</button>
           <button onClick={() => handleSmoothScroll('contact-section')} style={styles.navLinkBtn}>Contact</button>
-          {user?.role === 'admin' && (
-            <Link to="/admin" style={styles.adminBadge}>
-              <ShieldAlert size={13} /> Admin
-            </Link>
-          )}
           {user?.role === 'buyer' && (
             <Link to="/my-orders" style={styles.navLink}>My Orders</Link>
           )}
@@ -108,11 +103,6 @@ const Navbar = () => {
           <Link to="/catalogue" style={styles.mobileLink} onClick={() => setIsOpen(false)}>Catalogue</Link>
           <button onClick={() => handleSmoothScroll('brands-section')} style={styles.mobileLinkBtn}>Brands</button>
           <button onClick={() => handleSmoothScroll('contact-section')} style={styles.mobileLinkBtn}>Contact</button>
-          {user?.role === 'admin' && (
-            <Link to="/admin" style={styles.mobileAdminLink} onClick={() => setIsOpen(false)}>
-              <ShieldAlert size={15} /> Admin Panel
-            </Link>
-          )}
           {user?.role === 'buyer' && (
             <Link to="/my-orders" style={styles.mobileLink} onClick={() => setIsOpen(false)}>My Orders</Link>
           )}
