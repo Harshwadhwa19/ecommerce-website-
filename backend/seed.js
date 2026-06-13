@@ -1,7 +1,13 @@
+require('dotenv').config();
+const dns = require('dns');
+
+// Configure DNS overrides for MongoDB Atlas SRV resolution
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+dns.setDefaultResultOrder('ipv4first');
+
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const Product = require('./models/Product');
-require('dotenv').config();
 
 const adminUser = {
   name: 'J.G. Jeans Admin',
@@ -140,20 +146,25 @@ const seedDatabase = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Seed: Connected to Database...');
 
-    // Clear existing data
-    await User.deleteMany();
-    await Product.deleteMany();
-    console.log('Seed: Cleared existing tables.');
+    // Non-destructive seeding: check if admin exists
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+      await User.create(adminUser);
+      console.log('Seed: Admin user created successfully.');
+    } else {
+      console.log('Seed: Admin user already exists. Skipping creation.');
+    }
 
-    // Seed Admin
-    await User.create(adminUser);
-    console.log('Seed: Admin user created successfully.');
+    // Non-destructive seeding: check if products exist
+    const productCount = await Product.countDocuments();
+    if (productCount === 0) {
+      await Product.create(products);
+      console.log('Seed: Sample products seeded successfully.');
+    } else {
+      console.log('Seed: Products already exist in catalogue. Skipping product seeding.');
+    }
 
-    // Seed Products
-    await Product.create(products);
-    console.log('Seed: Sample products seeded successfully.');
-
-    console.log('Seed process completed!');
+    console.log('Seed process completed successfully!');
     process.exit(0);
   } catch (err) {
     console.error('Error seeding database:', err.message);
