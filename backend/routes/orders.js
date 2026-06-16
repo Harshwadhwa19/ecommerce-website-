@@ -5,6 +5,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { uploadScreenshots } = require('../config/cloudinary');
 const path = require('path');
 const fs = require('fs');
+const emailService = require('../services/emailService');
 
 // @desc    Place a new order
 // @route   POST /api/orders
@@ -55,6 +56,11 @@ router.post('/', protect, uploadScreenshots.single('screenshot'), async (req, re
       gstNumber,
       paymentScreenshot: req.file.path,
       status: 'Pending Verification'
+    });
+
+    // Send order confirmation email asynchronously to not block the checkout flow
+    emailService.sendOrderConfirmation(order, req.user).catch(err => {
+      console.error('[OrderRoute] Non-blocking order email delivery failed:', err);
     });
 
     res.status(201).json({
