@@ -17,10 +17,8 @@ const fs = require('fs');
 
 const app = express();
 
-// Trust proxy headers (Render sits behind a reverse proxy/load balancer)
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
+// Trust proxy headers (Render/Vercel sit behind reverse proxies/load balancers)
+app.set('trust proxy', 1);
 
 // Security Middlewares
 app.use(
@@ -103,9 +101,27 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/buyers', require('./routes/buyers'));
 
+// Wildcard API Route for 404s
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `API Route ${req.originalUrl} not found`
+  });
+});
+
 // Simple Root Route
 app.get('/', (req, res) => {
   res.send('J.G. Jeans Wholesale E-Commerce API is running...');
+});
+
+// Global Error Handler Middleware (returns JSON errors)
+app.use((err, req, res, next) => {
+  console.error('Express Error Handler:', err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    success: false,
+    error: err.message || 'Internal Server Error'
+  });
 });
 
 // Port configuration
