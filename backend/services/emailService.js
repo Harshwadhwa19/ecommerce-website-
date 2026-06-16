@@ -120,28 +120,66 @@ const generateOrderConfirmationHTML = (order, buyer) => {
   `;
 };
 
-// Generic Nodemailer Gmail SMTP delivery client
-const sendEmail = async ({ to, subject, html }) => {
+// Transporter Configuration Helper
+const createTransporterInstance = () => {
   const emailUser = process.env.EMAIL_USER;
   const emailAppPassword = process.env.EMAIL_APP_PASSWORD;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
+  const secure = process.env.SMTP_SECURE === 'true'; // false by default for 587/STARTTLS
+  const service = process.env.SMTP_SERVICE; // optional, e.g. 'gmail'
+
+  // Log configuration details safely
+  console.log('[EmailService] SMTP Configuration details:', {
+    service: service || 'none',
+    host,
+    port,
+    secure,
+    user: emailUser ? `${emailUser.substring(0, 3)}...` : 'Missing',
+    pass: emailAppPassword ? 'Provided' : 'Missing'
+  });
 
   if (!emailUser || !emailAppPassword) {
-    const error = new Error('Gmail SMTP credentials missing (EMAIL_USER or EMAIL_APP_PASSWORD)');
-    console.error("[EmailService] Email failed:", error);
-    return { success: false, error: error.message };
+    return null;
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
+  // If service is specified (like 'gmail'), use default nodemailer service transport
+  if (service) {
+    return nodemailer.createTransport({
+      service,
       auth: {
         user: emailUser,
         pass: emailAppPassword
       }
     });
+  }
 
+  // Direct SMTP transporter setup (allows custom ports/hosts, more reliable on cloud setups)
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user: emailUser,
+      pass: emailAppPassword
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000
+  });
+};
+
+// Generic SMTP delivery client
+const sendEmail = async ({ to, subject, html }) => {
+  const transporter = createTransporterInstance();
+  if (!transporter) {
+    const error = new Error('SMTP credentials missing (EMAIL_USER or EMAIL_APP_PASSWORD)');
+    console.error("[EmailService] Email failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  try {
     const mailOptions = {
-      from: '"J.G. Jeans Wholesale" <j.g.jeans0@gmail.com>',
+      from: `"J.G. Jeans Wholesale" <${process.env.EMAIL_USER || 'j.g.jeans0@gmail.com'}>`,
       to,
       subject,
       html
@@ -158,34 +196,40 @@ const sendEmail = async ({ to, subject, html }) => {
 };
 
 /**
- * Verifies Gmail SMTP transporter connection during server startup.
+ * Verifies SMTP transporter connection during server startup.
  */
 exports.verifyTransporter = async () => {
   console.log('[EmailService] Verifying SMTP transporter connection...');
+  
   const emailUser = process.env.EMAIL_USER;
   const emailAppPassword = process.env.EMAIL_APP_PASSWORD;
 
   console.log("EMAIL_USER:", emailUser ? "Loaded" : "Missing");
   console.log("EMAIL_APP_PASSWORD:", emailAppPassword ? "Loaded" : "Missing");
 
-  if (!emailUser || !emailAppPassword) {
+  const transporter = createTransporterInstance();
+  if (!transporter) {
     console.warn('[EmailService] SMTP verification skipped: credentials missing.');
     return false;
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailUser,
-        pass: emailAppPassword
-      }
-    });
     await transporter.verify();
     console.log('[EmailService] SMTP Transporter connection verified successfully - ready to dispatch emails');
     return true;
   } catch (error) {
     console.error('[EmailService] SMTP Transporter verification failed:', error);
+    if (error.code === 'ETIMEDOUT' || error.message.includes('timeout')) {
+      console.warn(
+        '[EmailService] SUGGESTION: Connection timed out. Cloud providers like Render often block port 465/SSL.\n' +
+        'Try switching to port 587 with secure=false (STARTTLS), or configure Brevo SMTP in your environment variables:\n' +
+        '  SMTP_HOST=smtp-relay.brevo.com\n' +
+        '  SMTP_PORT=587\n' +
+        '  SMTP_SECURE=false\n' +
+        '  EMAIL_USER=<your_brevo_login>\n' +
+        '  EMAIL_APP_PASSWORD=<your_brevo_smtp_key>'
+      );
+    }
     return false;
   }
 };
