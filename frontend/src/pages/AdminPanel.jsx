@@ -695,7 +695,8 @@ const AdminPanel = () => {
                             </tr>
                           )}
                         </React.Fragment>
-                      ))}
+                      );
+                    })}
                     </tbody>
                   </table>
                 </div>
