@@ -58,7 +58,14 @@ router.post('/', protect, uploadScreenshots.single('screenshot'), async (req, re
       status: 'Pending Verification'
     });
 
+    // Verify and log buyer details before triggering email
+    console.log("[OrderRoute] Verifying buyer details before sending email:");
+    console.log("buyer._id:", req.user ? req.user._id : 'undefined');
+    console.log("buyer.email:", req.user ? req.user.email : 'undefined');
+    console.log("buyer.name:", req.user ? req.user.name : 'undefined');
+
     // Send order confirmation email asynchronously to not block the checkout flow
+    console.log("[OrderRoute] Triggering sendOrderConfirmation...");
     emailService.sendOrderConfirmation(order, req.user).catch(err => {
       console.error('[OrderRoute] Non-blocking order email delivery failed:', err);
     });

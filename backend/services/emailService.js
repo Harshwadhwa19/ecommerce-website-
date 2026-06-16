@@ -126,8 +126,9 @@ const sendEmail = async ({ to, subject, html }) => {
   const emailAppPassword = process.env.EMAIL_APP_PASSWORD;
 
   if (!emailUser || !emailAppPassword) {
-    console.warn('WARNING: EMAIL_USER or EMAIL_APP_PASSWORD is not defined. Email dispatch is disabled.');
-    return { success: false, error: 'Gmail SMTP credentials missing' };
+    const error = new Error('Gmail SMTP credentials missing (EMAIL_USER or EMAIL_APP_PASSWORD)');
+    console.error("[EmailService] Email failed:", error);
+    return { success: false, error: error.message };
   }
 
   try {
@@ -147,11 +148,45 @@ const sendEmail = async ({ to, subject, html }) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[EmailService] Email sent successfully to ${to}. Message ID: ${info.messageId}`);
+    console.log("[EmailService] Email sent successfully");
+    console.log(`[EmailService] Details: sent successfully to ${to}. Message ID: ${info.messageId}`);
     return { success: true, data: info };
   } catch (error) {
-    console.error(`[EmailService] Failed to dispatch email to ${to}:`, error);
+    console.error("[EmailService] Email failed:", error);
     return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Verifies Gmail SMTP transporter connection during server startup.
+ */
+exports.verifyTransporter = async () => {
+  console.log('[EmailService] Verifying SMTP transporter connection...');
+  const emailUser = process.env.EMAIL_USER;
+  const emailAppPassword = process.env.EMAIL_APP_PASSWORD;
+
+  console.log("EMAIL_USER:", emailUser ? "Loaded" : "Missing");
+  console.log("EMAIL_APP_PASSWORD:", emailAppPassword ? "Loaded" : "Missing");
+
+  if (!emailUser || !emailAppPassword) {
+    console.warn('[EmailService] SMTP verification skipped: credentials missing.');
+    return false;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: emailUser,
+        pass: emailAppPassword
+      }
+    });
+    await transporter.verify();
+    console.log('[EmailService] SMTP Transporter connection verified successfully - ready to dispatch emails');
+    return true;
+  } catch (error) {
+    console.error('[EmailService] SMTP Transporter verification failed:', error);
+    return false;
   }
 };
 
@@ -160,8 +195,11 @@ const sendEmail = async ({ to, subject, html }) => {
  * Handles failures gracefully to avoid blocking the buyer.
  */
 exports.sendOrderConfirmation = async (order, buyer) => {
+  console.log("[EmailService] Attempting order confirmation email...");
+
   if (!buyer || !buyer.email) {
-    console.warn('[EmailService] Skipping order confirmation. Buyer email is empty.');
+    const error = new Error('Buyer email is empty or buyer object is undefined');
+    console.error("[EmailService] Email failed:", error);
     return;
   }
 
