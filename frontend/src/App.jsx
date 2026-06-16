@@ -15,6 +15,7 @@ import Catalogue from './pages/Catalogue';
 import ProductDetail from './pages/ProductDetail';
 import LoginRegister from './pages/LoginRegister';
 import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import MyOrders from './pages/MyOrders';
 import AdminPanel from './pages/AdminPanel';
 import OrderSuccess from './pages/OrderSuccess';
@@ -58,7 +59,7 @@ function AppContent() {
           
           {/* Buyer workflows guarded by BuyerOnlyRoute */}
           <Route path="/cart" element={<BuyerOnlyRoute><Cart /></BuyerOnlyRoute>} />
-          <Route path="/checkout" element={<BuyerOnlyRoute><Navigate to="/cart" replace /></BuyerOnlyRoute>} />
+          <Route path="/checkout" element={<BuyerOnlyRoute><Checkout /></BuyerOnlyRoute>} />
           <Route path="/order-success" element={<BuyerOnlyRoute><OrderSuccess /></BuyerOnlyRoute>} />
           <Route path="/my-orders" element={<BuyerOnlyRoute><MyOrders /></BuyerOnlyRoute>} />
           

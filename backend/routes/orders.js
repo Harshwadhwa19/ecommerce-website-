@@ -11,10 +11,25 @@ const fs = require('fs');
 // @access  Private
 router.post('/', protect, uploadScreenshots.single('screenshot'), async (req, res) => {
   try {
-    const { items, totalAmount, deliveryAddress } = req.body;
+    const { 
+      items, 
+      totalAmount, 
+      storeName, 
+      buyerName, 
+      phone, 
+      shippingAddress, 
+      city, 
+      state, 
+      pincode, 
+      gstNumber 
+    } = req.body;
 
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'Please upload a payment screenshot' });
+    }
+
+    if (!storeName || !buyerName || !phone || !shippingAddress || !city || !state || !pincode) {
+      return res.status(400).json({ success: false, error: 'Please fill out all required shipping details' });
     }
 
     const orderItems = typeof items === 'string' ? JSON.parse(items) : items;
@@ -23,13 +38,23 @@ router.post('/', protect, uploadScreenshots.single('screenshot'), async (req, re
       return res.status(400).json({ success: false, error: 'No items in the order' });
     }
 
+    const compiledAddress = `${shippingAddress}, ${city}, ${state} - ${pincode}`;
+
     const order = await Order.create({
       buyer: req.user.id,
       items: orderItems,
       totalAmount: Number(totalAmount),
-      deliveryAddress,
+      deliveryAddress: compiledAddress,
+      storeName,
+      buyerName,
+      phone,
+      shippingAddress,
+      city,
+      state,
+      pincode,
+      gstNumber,
       paymentScreenshot: req.file.path,
-      status: 'Pending'
+      status: 'Pending Verification'
     });
 
     res.status(201).json({

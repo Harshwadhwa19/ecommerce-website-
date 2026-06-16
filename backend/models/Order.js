@@ -45,8 +45,38 @@ const OrderSchema = new mongoose.Schema({
     required: true
   },
   deliveryAddress: {
+    type: String
+  },
+  storeName: {
     type: String,
-    required: [true, 'Please add delivery address']
+    required: [true, 'Please add store name']
+  },
+  buyerName: {
+    type: String,
+    required: [true, 'Please add buyer name']
+  },
+  phone: {
+    type: String,
+    required: [true, 'Please add mobile number']
+  },
+  shippingAddress: {
+    type: String,
+    required: [true, 'Please add shipping address']
+  },
+  city: {
+    type: String,
+    required: [true, 'Please add city']
+  },
+  state: {
+    type: String,
+    required: [true, 'Please add state']
+  },
+  pincode: {
+    type: String,
+    required: [true, 'Please add pincode']
+  },
+  gstNumber: {
+    type: String
   },
   paymentScreenshot: {
     type: String,
@@ -54,8 +84,8 @@ const OrderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered'],
-    default: 'Pending'
+    enum: ['Pending Verification', 'Payment Verified', 'Dispatched', 'Delivered', 'Rejected'],
+    default: 'Pending Verification'
   },
   createdAt: {
     type: Date,

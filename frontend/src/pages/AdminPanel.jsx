@@ -555,61 +555,83 @@ const AdminPanel = () => {
                     <thead>
                       <tr style={styles.tableHeaderRow}>
                         <th style={styles.tableTh}>Order ID</th>
-                        <th style={styles.tableTh}>Buyer / Shop</th>
-                        <th style={styles.tableTh}>Address</th>
+                        <th style={styles.tableTh}>Buyer Details</th>
+                        <th style={styles.tableTh}>Firm / Store</th>
+                        <th style={styles.tableTh}>Shipping Address</th>
                         <th style={styles.tableTh}>Total Amount</th>
                         <th style={styles.tableTh}>Date</th>
                         <th style={styles.tableTh}>Payment Receipt</th>
-                        <th style={styles.tableTh}>Order Status</th>
+                        <th style={styles.tableTh}>Order Actions</th>
                         <th style={styles.tableTh}>Details</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map(o => (
-                        <React.Fragment key={o._id}>
-                          <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: expandedOrders[o._id] ? '#f8fafc' : 'transparent' }}>
-                            <td style={{ ...styles.tableTd, fontFamily: 'monospace', fontWeight: 'bold' }}>
-                              #{o._id.substring(o._id.length - 8).toUpperCase()}
-                            </td>
-                            <td style={styles.tableTd}>
-                              <strong style={{ color: '#0d1160' }}>{o.buyer ? o.buyer.shopName : 'Unknown Shop'}</strong>
-                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                {o.buyer ? o.buyer.name : 'Unknown'} ({o.buyer ? o.buyer.phone : ''})
-                              </div>
-                            </td>
-                            <td style={{ ...styles.tableTd, fontSize: '0.8rem', maxWidth: '180px', wordBreak: 'break-word' }}>
-                              {o.deliveryAddress}
-                            </td>
-                            <td style={{ ...styles.tableTd, fontWeight: 'bold', color: '#1a237e' }}>
-                              ₹{o.totalAmount}
-                            </td>
-                            <td style={{ ...styles.tableTd, fontSize: '0.8rem' }}>
-                              {new Date(o.createdAt).toLocaleDateString('en-IN')}
-                            </td>
-                            <td style={styles.tableTd}>
-                              {o.paymentScreenshot ? (
-                                <a href={o.paymentScreenshot} target="_blank" rel="noopener noreferrer" style={styles.viewLink}>
-                                  <Eye size={12} /> View Proof
-                                </a>
-                              ) : <span style={{ color: '#ef4444' }}>None</span>}
-                            </td>
-                            <td style={styles.tableTd}>
-                              <select
-                                value={o.status}
-                                onChange={(e) => handleUpdateStatus(o._id, e.target.value)}
-                                style={{
-                                  ...styles.statusDropdown,
-                                  backgroundColor: o.status === 'Confirmed' ? '#d1fae5' : o.status === 'Shipped' ? '#dbeafe' : o.status === 'Delivered' ? '#eef2ff' : '#fef3c7',
-                                  color: o.status === 'Confirmed' ? '#065f46' : o.status === 'Shipped' ? '#1e40af' : o.status === 'Delivered' ? '#1e1b4b' : '#92400e'
-                                }}
-                                disabled={actionLoading}
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Shipped">Shipped</option>
-                                <option value="Delivered">Delivered</option>
-                              </select>
-                            </td>
+                      {orders.map(o => {
+                        const formattedId = `JG-${o._id.substring(o._id.length - 6).toUpperCase()}`;
+                        const displayStore = o.storeName || (o.buyer ? o.buyer.shopName : 'Unknown Store');
+                        const displayBuyer = o.buyerName || (o.buyer ? o.buyer.name : 'Unknown Buyer');
+                        const displayPhone = o.phone || (o.buyer ? o.buyer.phone : 'N/A');
+                        const displayAddress = o.shippingAddress 
+                          ? `${o.shippingAddress}, ${o.city}, ${o.state} - ${o.pincode}` 
+                          : o.deliveryAddress;
+
+                        return (
+                          <React.Fragment key={o._id}>
+                            <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: expandedOrders[o._id] ? '#f8fafc' : 'transparent' }}>
+                              <td style={{ ...styles.tableTd, fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                {formattedId}
+                              </td>
+                              <td style={styles.tableTd}>
+                                <strong style={{ color: '#0d1160' }}>{displayBuyer}</strong>
+                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                  Phone: {displayPhone}
+                                </div>
+                              </td>
+                              <td style={styles.tableTd}>
+                                <strong style={{ color: '#0d1160' }}>{displayStore}</strong>
+                              </td>
+                              <td style={{ ...styles.tableTd, fontSize: '0.8rem', maxWidth: '180px', wordBreak: 'break-word' }}>
+                                {displayAddress}
+                              </td>
+                              <td style={{ ...styles.tableTd, fontWeight: 'bold', color: '#1a237e' }}>
+                                ₹{o.totalAmount.toLocaleString('en-IN')}
+                              </td>
+                              <td style={{ ...styles.tableTd, fontSize: '0.8rem' }}>
+                                {new Date(o.createdAt).toLocaleDateString('en-IN')}
+                              </td>
+                              <td style={styles.tableTd}>
+                                {o.paymentScreenshot ? (
+                                  <a href={o.paymentScreenshot} target="_blank" rel="noopener noreferrer" style={styles.viewLink}>
+                                    <Eye size={12} /> View Proof
+                                  </a>
+                                ) : <span style={{ color: '#ef4444' }}>None</span>}
+                              </td>
+                              <td style={styles.tableTd}>
+                                <select
+                                  value={o.status}
+                                  onChange={(e) => handleUpdateStatus(o._id, e.target.value)}
+                                  style={{
+                                    ...styles.statusDropdown,
+                                    backgroundColor: 
+                                      o.status === 'Payment Verified' ? '#d1fae5' : 
+                                      o.status === 'Dispatched' ? '#dbeafe' : 
+                                      o.status === 'Delivered' ? '#eef2ff' : 
+                                      o.status === 'Rejected' ? '#fee2e2' : '#fef3c7',
+                                    color: 
+                                      o.status === 'Payment Verified' ? '#065f46' : 
+                                      o.status === 'Dispatched' ? '#1e40af' : 
+                                      o.status === 'Delivered' ? '#1e1b4b' : 
+                                      o.status === 'Rejected' ? '#ef4444' : '#92400e'
+                                  }}
+                                  disabled={actionLoading}
+                                >
+                                  <option value="Pending Verification">Pending Verification</option>
+                                  <option value="Payment Verified">Verify Payment</option>
+                                  <option value="Dispatched">Mark Dispatched</option>
+                                  <option value="Delivered">Mark Delivered</option>
+                                  <option value="Rejected">Reject Payment</option>
+                                </select>
+                              </td>
                             <td style={styles.tableTd}>
                               <button 
                                 onClick={() => toggleOrderExpand(o._id)}

@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { CheckCircle2, ShoppingBag, ArrowRight, ShieldCheck, MessageSquare } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, ArrowRight } from 'lucide-react';
 
 const OrderSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Retrieve state passed from checkout (Cart.jsx)
+  // Retrieve state passed from checkout (Checkout.jsx)
   const orderId = location.state?.orderId;
-  const totalAmount = location.state?.totalAmount;
 
   // Protect the page - if reached manually without order details, redirect to home
   useEffect(() => {
@@ -19,6 +18,9 @@ const OrderSuccess = () => {
 
   if (!orderId) return null;
 
+  // Format Order ID to professional JG-XXXX format (taking last 6 characters capitalized)
+  const formattedOrderId = `JG-${orderId.substring(orderId.length - 6).toUpperCase()}`;
+
   return (
     <div className="container" style={styles.container}>
       <div className="card" style={styles.card}>
@@ -26,59 +28,29 @@ const OrderSuccess = () => {
           <CheckCircle2 size={64} style={styles.successIcon} />
         </div>
 
-        <h2 style={styles.title}>Order Placed Successfully!</h2>
-        <p style={styles.subtitle}>Thank you for choosing J.G. Jeans. Your wholesale order is now being processed.</p>
-
-        {/* Order Details box */}
+        <h2 style={styles.title}>Order Placed Successfully</h2>
+        
         <div style={styles.detailsBox}>
           <div style={styles.detailRow}>
             <span style={styles.detailLabel}>Order ID:</span>
-            <span style={styles.detailValue}>#{orderId.toUpperCase()}</span>
+            <span style={styles.detailValue}>{formattedOrderId}</span>
           </div>
-          {totalAmount && (
-            <div style={styles.detailRow}>
-              <span style={styles.detailLabel}>Total Amount Paid:</span>
-              <span style={{ ...styles.detailValue, color: '#10b981' }}>₹{Number(totalAmount).toLocaleString('en-IN')}</span>
-            </div>
-          )}
           <div style={styles.detailRow}>
-            <span style={styles.detailLabel}>Payment Verification:</span>
-            <span style={{ ...styles.detailValue, color: '#e2b04a' }}>Pending Review</span>
+            <span style={styles.detailLabel}>Payment Status:</span>
+            <span style={{ ...styles.detailValue, color: '#e2b04a' }}>Verification Pending</span>
           </div>
         </div>
 
-        {/* Next Steps section */}
-        <div style={styles.instructionsBox}>
-          <h4 style={styles.instructionsTitle}>What happens next?</h4>
-          <div style={styles.stepsList}>
-            <div style={styles.stepItem}>
-              <div style={styles.stepNumber}>1</div>
-              <p style={styles.stepText}>Our accounts team will verify the payment screenshot you uploaded.</p>
-            </div>
-            <div style={styles.stepItem}>
-              <div style={styles.stepNumber}>2</div>
-              <p style={styles.stepText}>Once confirmed, your items will be packed and packed into styles bundles.</p>
-            </div>
-            <div style={styles.stepItem}>
-              <div style={styles.stepNumber}>3</div>
-              <p style={styles.stepText}>Dispatch details and transport LR details will be sent directly to your registered phone number / WhatsApp.</p>
-            </div>
-          </div>
-        </div>
+        <p style={styles.thankyouText}>Thank you for choosing J.G. Jeans Wholesale.</p>
+        <p style={styles.nextStepsText}>Our team will verify your payment and contact you shortly.</p>
 
-        {/* Trust Note */}
-        <div style={styles.trustBanner}>
-          <ShieldCheck size={16} />
-          <span>Need immediate dispatch help? Direct message factory line: <strong>8087351633</strong></span>
-        </div>
-
-        {/* Actions */}
+        {/* Action Buttons */}
         <div style={styles.actionButtons}>
           <Link to="/catalogue" className="btn btn-primary" style={styles.btnShop}>
             <ShoppingBag size={18} /> Continue Shopping
           </Link>
           <Link to="/my-orders" className="btn btn-secondary" style={styles.btnOrders}>
-            View Order History <ArrowRight size={16} />
+            My Orders <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -96,10 +68,13 @@ const styles = {
   },
   card: {
     width: '100%',
-    maxWidth: '550px',
+    maxWidth: '500px',
     padding: '40px 30px',
     textAlign: 'center',
-    boxShadow: '0 10px 25px rgba(13, 17, 96, 0.08)'
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '4px',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
   },
   iconWrapper: {
     display: 'flex',
@@ -110,37 +85,25 @@ const styles = {
     color: '#10b981'
   },
   title: {
-    fontSize: '1.8rem',
-    color: '#0d1160',
-    marginBottom: '10px',
-    fontFamily: 'Georgia, serif',
+    fontSize: '1.6rem',
+    color: '#10b981',
+    marginBottom: '24px',
+    fontFamily: 'sans-serif',
     fontWeight: '700'
-  },
-  subtitle: {
-    fontSize: '0.9rem',
-    color: '#64748b',
-    lineHeight: '1.6',
-    marginBottom: '28px',
-    maxWidth: '420px',
-    margin: '0 auto 28px'
   },
   detailsBox: {
     backgroundColor: '#f8fafc',
     border: '1px solid #e2e8f0',
-    borderRadius: '10px',
-    padding: '18px 24px',
+    borderRadius: '4px',
+    padding: '16px 20px',
     textAlign: 'left',
-    marginBottom: '28px'
+    marginBottom: '24px'
   },
   detailRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '8px 0',
-    borderBottom: '1px solid #f1f5f9',
-    fontSize: '0.92rem',
-    ':lastChild': {
-      borderBottom: 'none'
-    }
+    padding: '6px 0',
+    fontSize: '0.92rem'
   },
   detailLabel: {
     color: '#64748b',
@@ -149,65 +112,19 @@ const styles = {
   detailValue: {
     color: '#0d1160',
     fontWeight: '700',
-    fontFamily: 'monospace',
     fontSize: '0.95rem'
   },
-  instructionsBox: {
-    textAlign: 'left',
-    marginBottom: '28px'
-  },
-  instructionsTitle: {
+  thankyouText: {
     fontSize: '0.95rem',
     color: '#0d1160',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    marginBottom: '16px',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '8px'
+    fontWeight: '600',
+    margin: '0 0 8px 0'
   },
-  stepsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '14px'
-  },
-  stepItem: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '12px'
-  },
-  stepNumber: {
-    backgroundColor: 'rgba(26, 35, 126, 0.08)',
-    color: '#1a237e',
-    fontWeight: '700',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    fontSize: '0.85rem'
-  },
-  stepText: {
+  nextStepsText: {
     fontSize: '0.88rem',
     color: '#475569',
     lineHeight: '1.5',
-    margin: 0
-  },
-  trustBanner: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    backgroundColor: '#fffbeb',
-    border: '1px solid #fde68a',
-    borderRadius: '6px',
-    padding: '12px 16px',
-    fontSize: '0.8rem',
-    color: '#78350f',
-    marginBottom: '30px',
-    textAlign: 'left'
+    margin: '0 0 32px 0'
   },
   actionButtons: {
     display: 'flex',
