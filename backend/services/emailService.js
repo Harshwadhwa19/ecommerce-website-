@@ -1,3 +1,5 @@
+const nodemailer = require('nodemailer');
+
 const generateOrderConfirmationHTML = (order, buyer) => {
   const formattedId = `JG-${order._id.toString().substring(order._id.toString().length - 6).toUpperCase()}`;
   const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
@@ -118,37 +120,35 @@ const generateOrderConfirmationHTML = (order, buyer) => {
   `;
 };
 
-// Generic Resend delivery client
+// Generic Nodemailer Gmail SMTP delivery client
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn('WARNING: RESEND_API_KEY is not defined. Email dispatch is disabled.');
-    return { success: false, error: 'Resend API key missing' };
+  const emailUser = process.env.EMAIL_USER;
+  const emailAppPassword = process.env.EMAIL_APP_PASSWORD;
+
+  if (!emailUser || !emailAppPassword) {
+    console.warn('WARNING: EMAIL_USER or EMAIL_APP_PASSWORD is not defined. Email dispatch is disabled.');
+    return { success: false, error: 'Gmail SMTP credentials missing' };
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        from: 'J.G. Jeans Wholesale <onboarding@resend.dev>',
-        to,
-        subject,
-        html
-      })
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: emailUser,
+        pass: emailAppPassword
+      }
     });
 
-    const result = await response.json();
-    if (response.ok) {
-      console.log(`[EmailService] Email sent successfully to ${to}. ID: ${result.id}`);
-      return { success: true, data: result };
-    } else {
-      console.error(`[EmailService] Resend API error sending to ${to}:`, result);
-      return { success: false, error: result };
-    }
+    const mailOptions = {
+      from: '"J.G. Jeans Wholesale" <j.g.jeans0@gmail.com>',
+      to,
+      subject,
+      html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[EmailService] Email sent successfully to ${to}. Message ID: ${info.messageId}`);
+    return { success: true, data: info };
   } catch (error) {
     console.error(`[EmailService] Failed to dispatch email to ${to}:`, error);
     return { success: false, error: error.message };
