@@ -34,23 +34,37 @@ app.use(
 app.use(compression());
 
 // CORS Configuration
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
-  : ['http://localhost:3000', 'http://localhost:5173'];
+const isOriginAllowed = (origin) => {
+  // Allow requests with no origin (like mobile apps, postman, server-to-server)
+  if (!origin) return true;
+
+  // 1. Allow localhost development
+  if (/^http:\/\/localhost:(3000|5173)$/.test(origin)) {
+    return true;
+  }
+
+  // 2. Allow Vercel preview & production deployments for this specific project
+  // Matches: https://ecommerce-website.vercel.app & https://ecommerce-website-*.vercel.app
+  if (/^https:\/\/ecommerce-website(-[a-zA-Z0-9\-]+)?\.vercel\.app$/.test(origin)) {
+    return true;
+  }
+
+  // 3. Allow domains configured in FRONTEND_URL environment variable
+  if (process.env.FRONTEND_URL) {
+    const allowedOrigins = process.env.FRONTEND_URL.split(',').map((url) => url.trim().replace(/\/$/, ''));
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    if (allowedOrigins.includes(normalizedOrigin) || allowedOrigins.includes('*')) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, postman, server-to-server)
-      if (!origin) return callback(null, true);
-      
-      const isAllowed = allowedOrigins.some((allowedOrigin) => {
-        if (allowedOrigin === '*') return true;
-        // Strip trailing slash if any
-        return origin.replace(/\/$/, '') === allowedOrigin.replace(/\/$/, '');
-      });
-
-      if (isAllowed) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
