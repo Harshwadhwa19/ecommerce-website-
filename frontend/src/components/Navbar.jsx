@@ -47,6 +47,7 @@ const Navbar = () => {
         </Link>
 
         {/* Center Nav */}
+        {/* Center Nav */}
         <div style={styles.centerNav}>
           <Link to="/" style={styles.navLink}>Home</Link>
           <Link to="/catalogue" style={styles.navLink}>Catalogue</Link>
@@ -55,17 +56,22 @@ const Navbar = () => {
           {user?.role === 'buyer' && (
             <Link to="/my-orders" style={styles.navLink}>My Orders</Link>
           )}
+          {user?.role === 'admin' && (
+            <Link to="/admin" style={styles.navLink}>Admin Panel</Link>
+          )}
         </div>
 
         {/* Right Actions */}
         <div style={styles.rightNav}>
           {/* Cart */}
-          <Link to="/cart" style={styles.cartBtn}>
-            <ShoppingCart size={20} />
-            {totalItems > 0 && (
-              <span style={styles.cartBadge}>{totalItems}</span>
-            )}
-          </Link>
+          {user?.role !== 'admin' && (
+            <Link to="/cart" style={styles.cartBtn}>
+              <ShoppingCart size={20} />
+              {totalItems > 0 && (
+                <span style={styles.cartBadge}>{totalItems}</span>
+              )}
+            </Link>
+          )}
 
           {/* Divider */}
           <div style={styles.divider} />
@@ -106,9 +112,14 @@ const Navbar = () => {
           {user?.role === 'buyer' && (
             <Link to="/my-orders" style={styles.mobileLink} onClick={() => setIsOpen(false)}>My Orders</Link>
           )}
-          <Link to="/cart" style={styles.mobileLink} onClick={() => setIsOpen(false)}>
-            Cart ({totalItems} items)
-          </Link>
+          {user?.role === 'admin' && (
+            <Link to="/admin" style={styles.mobileLink} onClick={() => setIsOpen(false)}>Admin Panel</Link>
+          )}
+          {user?.role !== 'admin' && (
+            <Link to="/cart" style={styles.mobileLink} onClick={() => setIsOpen(false)}>
+              Cart ({totalItems} items)
+            </Link>
+          )}
           <div style={styles.mobileDivider} />
           {user ? (
             <div style={styles.mobileUserSection}>

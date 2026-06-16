@@ -1,30 +1,50 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const localData = localStorage.getItem('cart');
-      const parsed = localData ? JSON.parse(localData) : [];
-      if (Array.isArray(parsed)) {
-        // Safe check: filter out any corrupted legacy cart formats
-        return parsed.filter(item => item && item.product && item.product._id);
-      }
-      return [];
-    } catch (err) {
-      console.error('Error loading cart:', err);
-      return [];
-    }
-  });
+  const { user } = useAuth();
+  
+  const [cartItems, setCartItems] = useState([]);
 
-  // Sync cart items with localStorage
+  // Sync cart items with localStorage based on logged-in buyer
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (user && user.role === 'buyer') {
+      try {
+        const localData = localStorage.getItem(`cart_${user.id}`);
+        const parsed = localData ? JSON.parse(localData) : [];
+        if (Array.isArray(parsed)) {
+          // Safe check: filter out any corrupted legacy cart formats
+          setCartItems(parsed.filter(item => item && item.product && item.product._id));
+        } else {
+          setCartItems([]);
+        }
+      } catch (err) {
+        console.error('Error loading cart:', err);
+        setCartItems([]);
+      }
+    } else {
+      setCartItems([]);
+      // Clean up legacy and specific keys
+      localStorage.removeItem('cart');
+      if (user) {
+        localStorage.removeItem(`cart_${user.id}`);
+      }
+    }
+  }, [user]);
+
+  // Sync cart items with localStorage when cart or user changes
+  useEffect(() => {
+    if (user && user.role === 'buyer') {
+      localStorage.setItem(`cart_${user.id}`, JSON.stringify(cartItems));
+    }
+  }, [cartItems, user]);
 
   // Add item to cart
   const addToCart = (product, bundleQty, color) => {
+    if (!user || user.role !== 'buyer') return;
+    
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
         (item) =>
@@ -59,6 +79,8 @@ export const CartProvider = ({ children }) => {
 
   // Remove item from cart
   const removeFromCart = (productId, color) => {
+    if (!user || user.role !== 'buyer') return;
+    
     setCartItems((prevItems) =>
       prevItems.filter(
         (item) =>
@@ -73,6 +95,8 @@ export const CartProvider = ({ children }) => {
 
   // Update quantity of specific item
   const updateQuantity = (productId, color, bundleQty) => {
+    if (!user || user.role !== 'buyer') return;
+    
     if (bundleQty <= 0) {
       removeFromCart(productId, color);
       return;
@@ -97,6 +121,9 @@ export const CartProvider = ({ children }) => {
   // Clear all cart items
   const clearCart = () => {
     setCartItems([]);
+    if (user && user.role === 'buyer') {
+      localStorage.removeItem(`cart_${user.id}`);
+    }
   };
 
   // Calculate totals

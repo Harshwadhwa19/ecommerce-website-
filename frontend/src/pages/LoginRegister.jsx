@@ -44,7 +44,11 @@ const LoginRegister = () => {
       const res = await login(identity, password);
       
       if (res.success) {
-        navigate(from, { replace: true });
+        if (res.user && res.user.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
       }
     } else {
       // Register validation

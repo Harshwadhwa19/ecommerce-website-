@@ -79,10 +79,13 @@ const Cart = () => {
 
       if (result.success) {
         clearCart();
-        setMessage({ type: 'success', text: 'Order placed successfully! Redirecting to your order history...' });
-        setTimeout(() => {
-          navigate('/my-orders');
-        }, 3000);
+        navigate('/order-success', { 
+          state: { 
+            orderId: result.data._id,
+            totalAmount: result.data.totalAmount 
+          },
+          replace: true
+        });
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to place order. Please try again.' });
       }

@@ -50,6 +50,16 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (user.role === 'admin') {
+      alert('Admin users cannot purchase items or access the cart.');
+      return;
+    }
+    
     addToCart(product, bundleQty, selectedColor);
     setAddedMessage(true);
     setTimeout(() => {
@@ -245,14 +255,20 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            <button 
-              onClick={handleAddToCart}
-              className="btn btn-primary"
-              style={styles.addToCartBtn}
-              disabled={!product.inStock}
-            >
-              <ShoppingCart size={18} /> Add to Wholesale Cart
-            </button>
+            {user?.role === 'admin' ? (
+              <div style={{ padding: '14px', backgroundColor: '#fee2e2', border: '1px solid #f87171', borderRadius: '8px', color: '#991b1b', textAlign: 'center', fontWeight: 'bold', fontSize: '0.95rem' }}>
+                Admin Mode: Ordering Disabled
+              </div>
+            ) : (
+              <button 
+                onClick={handleAddToCart}
+                className="btn btn-primary"
+                style={styles.addToCartBtn}
+                disabled={!product.inStock}
+              >
+                <ShoppingCart size={18} /> Add to Wholesale Cart
+              </button>
+            )}
             
             {addedMessage && (
               <div style={styles.successBanner}>
