@@ -97,7 +97,7 @@ router.post('/upload', protect, authorize('admin'), uploadProducts.array('images
 // @access  Private/Admin
 router.post('/', protect, authorize('admin'), uploadProducts.array('images', 5), async (req, res) => {
   try {
-    const { name, brand, type, pricePerPiece, piecesPerBundle, moq, sizes, colors, description, inStock } = req.body;
+    const { name, brand, type, pricePerPiece, piecesPerBundle, moq, sizes, colors, description, inStock, bundleComposition } = req.body;
 
     // Build the images array from Cloudinary uploads
     const imageUrls = req.files 
@@ -136,14 +136,25 @@ router.post('/', protect, authorize('admin'), uploadProducts.array('images', 5),
       }
     }
 
+    let parsedComposition;
+    let parsedSizes = sizes ? (typeof sizes === 'string' ? JSON.parse(sizes) : sizes) : [28, 30, 32, 34, 36];
+    if (bundleComposition) {
+      const rawComp = typeof bundleComposition === 'string' ? JSON.parse(bundleComposition) : bundleComposition;
+      if (Array.isArray(rawComp)) {
+        parsedComposition = rawComp.map(c => ({ size: Number(c.size), quantity: Number(c.quantity) }));
+        parsedSizes = parsedComposition.map(c => c.size);
+      }
+    }
+
     const product = await Product.create({
       name,
       brand,
       type,
       pricePerPiece: Number(pricePerPiece),
       piecesPerBundle: Number(piecesPerBundle) || 5,
+      bundleComposition: parsedComposition,
       moq: Number(moq) || 50,
-      sizes: sizes ? (typeof sizes === 'string' ? JSON.parse(sizes) : sizes) : [28, 30, 32, 34, 36],
+      sizes: parsedSizes,
       colors: parsedColors,
       images: imageUrls,
       description,
@@ -169,7 +180,7 @@ router.put('/:id', protect, authorize('admin'), uploadProducts.array('images', 5
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
 
-    const { name, brand, type, pricePerPiece, piecesPerBundle, moq, sizes, colors, description, inStock } = req.body;
+    const { name, brand, type, pricePerPiece, piecesPerBundle, moq, sizes, colors, description, inStock, bundleComposition } = req.body;
 
     let parsedColors;
     if (colors) {
@@ -203,6 +214,16 @@ router.put('/:id', protect, authorize('admin'), uploadProducts.array('images', 5
       }
     }
 
+    let parsedComposition;
+    let parsedSizes = sizes ? (typeof sizes === 'string' ? JSON.parse(sizes) : sizes) : [28, 30, 32, 34, 36];
+    if (bundleComposition) {
+      const rawComp = typeof bundleComposition === 'string' ? JSON.parse(bundleComposition) : bundleComposition;
+      if (Array.isArray(rawComp)) {
+        parsedComposition = rawComp.map(c => ({ size: Number(c.size), quantity: Number(c.quantity) }));
+        parsedSizes = parsedComposition.map(c => c.size);
+      }
+    }
+
     let updatedFields = {
       name,
       brand,
@@ -210,10 +231,14 @@ router.put('/:id', protect, authorize('admin'), uploadProducts.array('images', 5
       pricePerPiece: Number(pricePerPiece),
       piecesPerBundle: Number(piecesPerBundle) || 5,
       moq: Number(moq) || 50,
-      sizes: sizes ? (typeof sizes === 'string' ? JSON.parse(sizes) : sizes) : [28, 30, 32, 34, 36],
+      sizes: parsedSizes,
       description,
       inStock: inStock === 'true' || inStock === true
     };
+
+    if (parsedComposition) {
+      updatedFields.bundleComposition = parsedComposition;
+    }
 
     if (parsedColors) {
       updatedFields.colors = parsedColors;

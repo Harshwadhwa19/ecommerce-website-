@@ -46,6 +46,13 @@ const AdminPanel = () => {
   ]);
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImage, setNewProdImage] = useState(null);
+  const [newProdBundleComposition, setNewProdBundleComposition] = useState([
+    { size: 28, quantity: 1 },
+    { size: 30, quantity: 1 },
+    { size: 32, quantity: 1 },
+    { size: 34, quantity: 1 },
+    { size: 36, quantity: 1 }
+  ]);
 
   // Product Editing Modal States
   const [editingProduct, setEditingProduct] = useState(null);
@@ -60,6 +67,7 @@ const AdminPanel = () => {
   const [editDesc, setEditDesc] = useState('');
   const [editImage, setEditImage] = useState(null);
   const [editInStock, setEditInStock] = useState(true);
+  const [editBundleComposition, setEditBundleComposition] = useState([]);
 
   // Fetching methods
   const fetchOrders = async () => {
@@ -286,8 +294,9 @@ const AdminPanel = () => {
       formData.append('piecesPerBundle', Number(newProdPiecesPerBundle) || 5);
       formData.append('moq', Number(newProdMoq));
       formData.append('description', newProdDesc);
+      formData.append('bundleComposition', JSON.stringify(newProdBundleComposition.filter(c => c.size !== '')));
       
-      const sizesArray = newProdSizes.split(',').map(s => Number(s.trim())).filter(s => !isNaN(s));
+      const sizesArray = newProdBundleComposition.map(c => Number(c.size)).filter(s => !isNaN(s));
       formData.append('sizes', JSON.stringify(sizesArray));
 
       // Filter empty colors and attach
@@ -314,6 +323,14 @@ const AdminPanel = () => {
         setNewProdMoq(50);
         setNewProdDesc('');
         setNewProdImage(null);
+        setNewProdPiecesPerBundle(5);
+        setNewProdBundleComposition([
+          { size: 28, quantity: 1 },
+          { size: 30, quantity: 1 },
+          { size: 32, quantity: 1 },
+          { size: 34, quantity: 1 },
+          { size: 36, quantity: 1 }
+        ]);
         setNewProdColors([
           { name: 'Indigo Blue', hexCode: '#2e5894', stock: 100, images: [] },
           { name: 'Jet Black', hexCode: '#111111', stock: 100, images: [] }
@@ -343,6 +360,16 @@ const AdminPanel = () => {
     setEditDesc(product.description || '');
     setEditInStock(product.inStock !== false);
     setEditImage(null);
+    setEditBundleComposition(product.bundleComposition && product.bundleComposition.length > 0 
+      ? product.bundleComposition.map(c => ({ size: c.size, quantity: c.quantity }))
+      : product.sizes ? product.sizes.map(sz => ({ size: sz, quantity: 1 })) : [
+          { size: 28, quantity: 1 },
+          { size: 30, quantity: 1 },
+          { size: 32, quantity: 1 },
+          { size: 34, quantity: 1 },
+          { size: 36, quantity: 1 }
+        ]
+    );
   };
 
   // Edit Product color handlers
@@ -403,6 +430,59 @@ const AdminPanel = () => {
     }));
   };
 
+  // Bundle Composition Handlers
+  const handleNewCompositionChange = (index, quantity) => {
+    const updated = newProdBundleComposition.map((item, idx) => 
+      idx === index ? { ...item, quantity: Number(quantity) >= 0 ? Number(quantity) : 0 } : item
+    );
+    setNewProdBundleComposition(updated);
+    const sum = updated.reduce((s, c) => s + c.quantity, 0);
+    setNewProdPiecesPerBundle(sum);
+  };
+
+  const handleEditCompositionChange = (index, quantity) => {
+    const updated = editBundleComposition.map((item, idx) => 
+      idx === index ? { ...item, quantity: Number(quantity) >= 0 ? Number(quantity) : 0 } : item
+    );
+    setEditBundleComposition(updated);
+    const sum = updated.reduce((s, c) => s + c.quantity, 0);
+    setEditPiecesPerBundle(sum);
+  };
+
+  const handleAddNewSizeToComposition = () => {
+    setNewProdBundleComposition([...newProdBundleComposition, { size: '', quantity: 1 }]);
+  };
+
+  const handleRemoveNewSizeFromComposition = (index) => {
+    const updated = newProdBundleComposition.filter((_, idx) => idx !== index);
+    setNewProdBundleComposition(updated);
+    const sum = updated.reduce((s, c) => s + c.quantity, 0);
+    setNewProdPiecesPerBundle(sum);
+  };
+
+  const handleAddEditSizeToComposition = () => {
+    setEditBundleComposition([...editBundleComposition, { size: '', quantity: 1 }]);
+  };
+
+  const handleRemoveEditSizeFromComposition = (index) => {
+    const updated = editBundleComposition.filter((_, idx) => idx !== index);
+    setEditBundleComposition(updated);
+    const sum = updated.reduce((s, c) => s + c.quantity, 0);
+    setEditPiecesPerBundle(sum);
+  };
+
+  const handleNewSizeValueChange = (index, size) => {
+    setNewProdBundleComposition(newProdBundleComposition.map((item, idx) => 
+      idx === index ? { ...item, size: size === '' ? '' : Number(size) } : item
+    ));
+  };
+
+  const handleEditSizeValueChange = (index, size) => {
+    setEditBundleComposition(editBundleComposition.map((item, idx) => 
+      idx === index ? { ...item, size: size === '' ? '' : Number(size) } : item
+    ));
+  };
+
   // Submit Edit Product
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
@@ -419,8 +499,9 @@ const AdminPanel = () => {
       formData.append('moq', Number(editMoq));
       formData.append('description', editDesc);
       formData.append('inStock', editInStock);
-
-      const sizesArray = editSizes.split(',').map(s => Number(s.trim())).filter(s => !isNaN(s));
+      formData.append('bundleComposition', JSON.stringify(editBundleComposition.filter(c => c.size !== '')));
+ 
+      const sizesArray = editBundleComposition.map(c => Number(c.size)).filter(s => !isNaN(s));
       formData.append('sizes', JSON.stringify(sizesArray));
 
       const colorsToSubmit = editColors.filter(c => c.name.trim() !== '');
@@ -847,13 +928,12 @@ const AdminPanel = () => {
                     </div>
 
                     <div>
-                      <label style={styles.inputLabel}>Pcs / Bundle *</label>
+                      <label style={styles.inputLabel}>Pcs / Bundle (Calculated)</label>
                       <input 
                         type="number" 
-                        style={styles.formInput}
+                        style={{ ...styles.formInput, backgroundColor: '#f1f5f9' }}
                         value={newProdPiecesPerBundle}
-                        onChange={(e) => setNewProdPiecesPerBundle(Number(e.target.value))}
-                        required
+                        readOnly
                       />
                     </div>
 
@@ -869,15 +949,57 @@ const AdminPanel = () => {
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '14px' }}>
-                    <label style={styles.inputLabel}>Available Sizes (Comma-separated)</label>
-                    <input 
-                      type="text" 
-                      style={styles.formInput}
-                      placeholder="e.g. 28, 30, 32, 34, 36" 
-                      value={newProdSizes}
-                      onChange={(e) => setNewProdSizes(e.target.value)}
-                    />
+                  {/* Bundle Composition Manager */}
+                  <div style={{ marginBottom: '14px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <label style={{ ...styles.inputLabel, margin: 0 }}>Bundle Size Composition *</label>
+                      <button 
+                        type="button" 
+                        onClick={handleAddNewSizeToComposition}
+                        style={{ ...styles.btn, padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#eef2ff', color: '#1a237e', border: '1px solid #c7d2fe' }}
+                      >
+                        + Add Size
+                      </button>
+                    </div>
+                    
+                    {newProdBundleComposition.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Size:</span>
+                          <input 
+                            type="number"
+                            style={{ ...styles.formInput, padding: '6px 8px', fontSize: '0.8rem' }}
+                            placeholder="e.g. 30"
+                            value={item.size}
+                            onChange={(e) => handleNewSizeValueChange(idx, e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Qty:</span>
+                          <input 
+                            type="number"
+                            style={{ ...styles.formInput, padding: '6px 8px', fontSize: '0.8rem' }}
+                            placeholder="e.g. 1"
+                            value={item.quantity}
+                            onChange={(e) => handleNewCompositionChange(idx, e.target.value)}
+                            required
+                          />
+                        </div>
+                        {newProdBundleComposition.length > 1 && (
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveNewSizeFromComposition(idx)}
+                            style={{ padding: '6px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', textAlign: 'right' }}>
+                      Calculated Bundle Size: <strong>{newProdPiecesPerBundle} pieces</strong>
+                    </div>
                   </div>
 
                   {/* Colors List Manager */}
@@ -1253,13 +1375,12 @@ const AdminPanel = () => {
                 </div>
 
                 <div>
-                  <label style={styles.inputLabel}>Pcs / Bundle *</label>
+                  <label style={styles.inputLabel}>Pcs / Bundle (Calculated)</label>
                   <input 
                     type="number" 
-                    style={styles.formInput}
+                    style={{ ...styles.formInput, backgroundColor: '#f1f5f9' }}
                     value={editPiecesPerBundle}
-                    onChange={(e) => setEditPiecesPerBundle(Number(e.target.value))}
-                    required
+                    readOnly
                   />
                 </div>
 
@@ -1275,14 +1396,59 @@ const AdminPanel = () => {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '12px' }}>
-                <label style={styles.inputLabel}>Available Sizes (Comma-separated)</label>
-                <input 
-                  type="text" 
-                  style={styles.formInput}
-                  value={editSizes}
-                  onChange={(e) => setEditSizes(e.target.value)}
-                />
+              {/* Edit Modal Bundle Composition Manager */}
+              <div style={{ marginBottom: '12px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', backgroundColor: '#f8fafc' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <label style={{ ...styles.inputLabel, margin: 0 }}>Bundle Size Composition *</label>
+                  <button 
+                    type="button" 
+                    onClick={handleAddEditSizeToComposition}
+                    style={{ ...styles.btn, padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#eef2ff', color: '#1a237e', border: '1px solid #c7d2fe' }}
+                  >
+                    + Add Size
+                  </button>
+                </div>
+                
+                <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                  {editBundleComposition.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Size:</span>
+                        <input 
+                          type="number"
+                          style={{ ...styles.formInput, padding: '6px 8px', fontSize: '0.8rem' }}
+                          placeholder="e.g. 30"
+                          value={item.size}
+                          onChange={(e) => handleEditSizeValueChange(idx, e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Qty:</span>
+                        <input 
+                          type="number"
+                          style={{ ...styles.formInput, padding: '6px 8px', fontSize: '0.8rem' }}
+                          placeholder="e.g. 1"
+                          value={item.quantity}
+                          onChange={(e) => handleEditCompositionChange(idx, e.target.value)}
+                          required
+                        />
+                      </div>
+                      {editBundleComposition.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => handleRemoveEditSizeFromComposition(idx)}
+                          style={{ padding: '6px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px', textAlign: 'right' }}>
+                  Calculated Bundle Size: <strong>{editPiecesPerBundle} pieces</strong>
+                </div>
               </div>
 
               {/* Edit Modal Colors & Stock Manager */}

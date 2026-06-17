@@ -196,19 +196,28 @@ const ProductDetail = () => {
               lineHeight: '1.5'
             }}>
               <p style={{ fontWeight: '600', marginBottom: '8px', color: '#0d1160' }}>
-                Each bundle is color-specific and contains exactly 5 pieces in assorted sizes:
+                Each bundle is color-specific and contains exactly {product.piecesPerBundle || 5} pieces in assorted sizes:
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', textAlign: 'center', marginTop: '10px' }}>
-                {['28', '30', '32', '34', '36'].map(sz => (
-                  <div key={sz} style={{
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${product.bundleComposition?.length || 5}, minmax(0, 1fr))`, gap: '8px', textAlign: 'center', marginTop: '10px' }}>
+                {(product.bundleComposition && product.bundleComposition.length > 0 
+                  ? product.bundleComposition 
+                  : [
+                      { size: 28, quantity: 1 },
+                      { size: 30, quantity: 1 },
+                      { size: 32, quantity: 1 },
+                      { size: 34, quantity: 1 },
+                      { size: 36, quantity: 1 }
+                    ]
+                ).map((c, idx) => (
+                  <div key={idx} style={{
                     border: '1px solid #cbd5e1',
                     borderRadius: '6px',
                     padding: '8px 4px',
                     backgroundColor: '#ffffff'
                   }}>
                     <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Size</div>
-                    <div style={{ fontWeight: '700', color: '#1e293b', marginTop: '2px' }}>{sz}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#10b981', marginTop: '2px' }}>1 pc</div>
+                    <div style={{ fontWeight: '700', color: '#1e293b', marginTop: '2px' }}>{c.size}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#10b981', marginTop: '2px' }}>{c.quantity} {c.quantity === 1 ? 'pc' : 'pcs'}</div>
                   </div>
                 ))}
               </div>
@@ -276,11 +285,11 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {isQuantityBelowMOQ && (
+            {totalPieces < 120 && (
               <div style={styles.warningBanner}>
                 <ShieldAlert size={18} />
                 <span>
-                  <strong>Warning:</strong> MOQ is <strong>{product.moq} pieces</strong>. You currently have <strong>{totalPieces} pieces</strong> selected. You can still add to cart, but checkout requires total items of this style to be ≥ {product.moq} pieces.
+                  <strong>Notice:</strong> Factory Minimum Order Quantity (MOQ) is <strong>120 total pieces across your entire cart</strong>. You currently have <strong>{totalPieces} pieces</strong> of this style selected. You can mix other designs/colors to reach 120 pieces.
                 </span>
               </div>
             )}

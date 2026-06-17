@@ -44,10 +44,10 @@ const Checkout = () => {
 
   // Guard: If cart is empty or MOQ not met, redirect to Cart page
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 || !isMoqMet) {
       navigate('/cart');
     }
-  }, [cartItems, navigate]);
+  }, [cartItems, isMoqMet, navigate]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -333,7 +333,7 @@ const Checkout = () => {
                           Brand: <strong>{item.product.brand}</strong> | Color: <strong>{item.color}</strong>
                         </div>
                         <div style={styles.summaryItemSubtitle}>
-                          Sizes Assortment: <strong>28, 30, 32, 34, 36</strong>
+                          Pieces Per Bundle: <strong>{item.piecesPerBundle || 5} pcs</strong> | Total Pieces: <strong>{item.bundleQty * (item.piecesPerBundle || 5)} pcs</strong>
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', minWidth: '120px' }}>

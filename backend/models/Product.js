@@ -25,6 +25,21 @@ const ProductSchema = new mongoose.Schema({
     default: 5,
     required: true
   },
+  bundleComposition: {
+    type: [
+      {
+        size: { type: Number, required: true },
+        quantity: { type: Number, required: true }
+      }
+    ],
+    default: [
+      { size: 28, quantity: 1 },
+      { size: 30, quantity: 1 },
+      { size: 32, quantity: 1 },
+      { size: 34, quantity: 1 },
+      { size: 36, quantity: 1 }
+    ]
+  },
   moq: {
     type: Number,
     default: 50,

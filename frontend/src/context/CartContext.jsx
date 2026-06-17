@@ -183,7 +183,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const underMoqItems = getUnderMoqItems();
-  const isMoqMet = underMoqItems.length === 0;
+  const isMoqMet = totalItems >= 120;
 
   return (
     <CartContext.Provider

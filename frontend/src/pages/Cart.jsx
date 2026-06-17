@@ -66,7 +66,9 @@ const Cart = () => {
                   <div style={styles.itemMetaInfo}>
                     <span>Color: <strong>{item.color}</strong></span>
                     <span style={styles.metaDot}>•</span>
-                    <span>Sizes: <strong>28, 30, 32, 34, 36 (Assorted)</strong></span>
+                    <span>Pieces Per Bundle: <strong>{item.piecesPerBundle || 5} pcs</strong></span>
+                    <span style={styles.metaDot}>•</span>
+                    <span>Total Pieces: <strong>{item.bundleQty * (item.piecesPerBundle || 5)} pcs</strong></span>
                   </div>
                 </div>
 
@@ -105,24 +107,50 @@ const Cart = () => {
               </div>
             )})}
 
-            {/* Cart MOQ Indicators */}
-            {!isMoqMet && (
-              <div style={styles.moqWarningBox}>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b45309', margin: '0 0 8px 0' }}>
-                  <AlertTriangle size={18} /> Minimum Order Quantity (MOQ) Not Met
-                </h4>
-                <p style={{ fontSize: '0.85rem', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-                  Wholesale orders are packed by styles. The following items do not meet the minimum factory production size:
-                </p>
-                <ul style={{ paddingLeft: '20px', fontSize: '0.85rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px', color: '#78350f' }}>
-                  {underMoqItems.map(item => (
-                    <li key={item.product._id}>
-                      <strong>{item.product.name}</strong>: Current total is <strong>{item.currentQuantity}</strong> pieces. Needs at least <strong>{item.moq}</strong> pieces (Short by <strong>{item.needed}</strong> pieces, i.e., <strong>{Math.ceil(item.needed / (item.product.piecesPerBundle || 5))}</strong> bundles).
-                    </li>
-                  ))}
-                </ul>
+            {/* New Global MOQ Indicator */}
+            <div style={{
+              backgroundColor: isMoqMet ? '#d1fae5' : '#fffbeb',
+              border: `1px solid ${isMoqMet ? '#a7f3d0' : '#fde68a'}`,
+              borderRadius: '8px',
+              padding: '20px',
+              marginTop: '20px',
+              color: isMoqMet ? '#065f46' : '#78350f'
+            }}>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 12px 0', fontSize: '1.05rem', fontWeight: '700' }}>
+                {isMoqMet ? (
+                  <>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#10b981', color: '#ffffff', fontSize: '0.8rem' }}>✓</span>
+                    MOQ Status: Reached
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle size={18} style={{ color: '#d97706' }} />
+                    MOQ Status: Need {Math.max(0, 120 - totalItems)} More Pieces
+                  </>
+                )}
+              </h4>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600' }}>Current Total</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0d1160', marginTop: '4px' }}>{totalItems} <span style={{ fontSize: '0.8rem', fontWeight: '500' }}>pcs</span></div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600' }}>Minimum Required</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#e2b04a', marginTop: '4px' }}>120 <span style={{ fontSize: '0.8rem', fontWeight: '500' }}>pcs</span></div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600' }}>Remaining Needed</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: isMoqMet ? '#10b981' : '#ef4444', marginTop: '4px' }}>{Math.max(0, 120 - totalItems)} <span style={{ fontSize: '0.8rem', fontWeight: '500' }}>pcs</span></div>
+                </div>
               </div>
-            )}
+
+              {!isMoqMet && (
+                <p style={{ fontSize: '0.85rem', color: '#b45309', margin: '12px 0 0 0', lineHeight: '1.4' }}>
+                  * Wholesale production requires a total minimum order quantity of <strong>120 pieces</strong> across all styles and colors in your cart. Feel free to add more items/bundles to satisfy this.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
