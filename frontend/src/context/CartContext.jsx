@@ -139,50 +139,6 @@ export const CartProvider = ({ children }) => {
 
   const totalItems = cartItems.reduce((sum, item) => sum + ((item.bundleQty || 0) * (item.piecesPerBundle || 5)), 0);
 
-  // Group by product ID to check if total quantity for a product meets its MOQ
-  const getProductTotalQuantities = () => {
-    const totals = {};
-    cartItems.forEach((item) => {
-      if (item && item.product && item.product._id) {
-        const id = item.product._id;
-        const pieces = (item.bundleQty || 0) * (item.piecesPerBundle || 5);
-        totals[id] = (totals[id] || 0) + pieces;
-      }
-    });
-    return totals;
-  };
-
-  const productTotals = getProductTotalQuantities();
-
-  // Validate MOQs
-  // Returns an array of items/products that fail their MOQ requirement
-  const getUnderMoqItems = () => {
-    const underMoq = [];
-    const checkedProductIds = new Set();
-
-    cartItems.forEach((item) => {
-      if (!item || !item.product || !item.product._id) return;
-      const productId = item.product._id;
-      if (checkedProductIds.has(productId)) return;
-      checkedProductIds.add(productId);
-
-      const totalQty = productTotals[productId] || 0;
-      const moq = item.product.moq || 50;
-
-      if (totalQty < moq) {
-        underMoq.push({
-          product: item.product,
-          currentQuantity: totalQty,
-          moq: moq,
-          needed: moq - totalQty
-        });
-      }
-    });
-
-    return underMoq;
-  };
-
-  const underMoqItems = getUnderMoqItems();
   const isMoqMet = totalItems >= 120;
 
   return (
@@ -192,7 +148,6 @@ export const CartProvider = ({ children }) => {
         totalAmount,
         totalItems,
         isMoqMet,
-        underMoqItems,
         addToCart,
         removeFromCart,
         updateQuantity,

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Trash2, AlertTriangle, ShoppingCart, ArrowRight } from 'lucide-react';
 
 const Cart = () => {
-  const { cartItems, totalAmount, totalItems, isMoqMet, underMoqItems, updateQuantity, removeFromCart } = useCart();
+  const { cartItems, totalAmount, totalItems, isMoqMet, updateQuantity, removeFromCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -15,7 +15,7 @@ const Cart = () => {
       return;
     }
     if (!isMoqMet) {
-      alert('Please satisfy all Minimum Order Quantity (MOQ) requirements before proceeding!');
+      alert('Your cart must have a minimum of 120 total pieces before you can proceed to checkout.');
       return;
     }
     navigate('/checkout');
