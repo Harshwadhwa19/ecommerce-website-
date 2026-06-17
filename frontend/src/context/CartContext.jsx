@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
@@ -6,13 +6,36 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
   
-  const [cartItems, setCartItems] = useState([]);
+  // Synchronously initialize cart items from localStorage on startup if user is logged in
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const savedUserStr = localStorage.getItem('user');
+      if (savedUserStr) {
+        const savedUser = JSON.parse(savedUserStr);
+        if (savedUser && savedUser.role === 'buyer') {
+          const userId = savedUser.id || savedUser._id;
+          const localData = localStorage.getItem(`cart_${userId}`);
+          const parsed = localData ? JSON.parse(localData) : [];
+          if (Array.isArray(parsed)) {
+            return parsed.filter(item => item && item.product && item.product._id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error reading initial cart:', err);
+    }
+    return [];
+  });
+
+  const prevUserIdRef = useRef(user ? (user.id || user._id) : null);
 
   // Sync cart items with localStorage based on logged-in buyer
   useEffect(() => {
+    const userId = user ? (user.id || user._id) : null;
     if (user && user.role === 'buyer') {
+      prevUserIdRef.current = userId;
       try {
-        const localData = localStorage.getItem(`cart_${user.id}`);
+        const localData = localStorage.getItem(`cart_${userId}`);
         const parsed = localData ? JSON.parse(localData) : [];
         if (Array.isArray(parsed)) {
           // Safe check: filter out any corrupted legacy cart formats
@@ -28,8 +51,11 @@ export const CartProvider = ({ children }) => {
       setCartItems([]);
       // Clean up legacy and specific keys
       localStorage.removeItem('cart');
-      if (user) {
-        localStorage.removeItem(`cart_${user.id}`);
+      if (!user && prevUserIdRef.current) {
+        localStorage.removeItem(`cart_${prevUserIdRef.current}`);
+        prevUserIdRef.current = null;
+      } else if (user) {
+        localStorage.removeItem(`cart_${userId}`);
       }
     }
   }, [user]);
@@ -37,7 +63,8 @@ export const CartProvider = ({ children }) => {
   // Sync cart items with localStorage when cart or user changes
   useEffect(() => {
     if (user && user.role === 'buyer') {
-      localStorage.setItem(`cart_${user.id}`, JSON.stringify(cartItems));
+      const userId = user.id || user._id;
+      localStorage.setItem(`cart_${userId}`, JSON.stringify(cartItems));
     }
   }, [cartItems, user]);
 
@@ -122,7 +149,8 @@ export const CartProvider = ({ children }) => {
   const clearCart = () => {
     setCartItems([]);
     if (user && user.role === 'buyer') {
-      localStorage.removeItem(`cart_${user.id}`);
+      const userId = user.id || user._id;
+      localStorage.removeItem(`cart_${userId}`);
     }
   };
 

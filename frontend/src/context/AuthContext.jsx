@@ -3,9 +3,21 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (err) {
+      return null;
+    }
+  });
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    const hasToken = !!localStorage.getItem('token');
+    const hasUser = !!localStorage.getItem('user');
+    // If we have a token but no user, we need to show the loading screen to fetch it first.
+    return hasToken && !hasUser;
+  });
   const [error, setError] = useState(null);
 
   // Authenticate user with token on load
@@ -13,6 +25,7 @@ export const AuthProvider = ({ children }) => {
     const fetchUser = async () => {
       if (!token) {
         setUser(null);
+        localStorage.removeItem('user');
         setLoading(false);
         return;
       }
@@ -28,14 +41,17 @@ export const AuthProvider = ({ children }) => {
 
         if (result.success) {
           setUser(result.data);
+          localStorage.setItem('user', JSON.stringify(result.data));
         } else {
           // Token expired or invalid
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
           setToken('');
           setUser(null);
         }
       } catch (err) {
         console.error('Error fetching user profile:', err);
+        // Do not log out on network errors, preserve cached session
       } finally {
         setLoading(false);
       }
@@ -61,6 +77,7 @@ export const AuthProvider = ({ children }) => {
 
       if (result.success) {
         localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
         setToken(result.token);
         setUser(result.user);
         return { success: true, user: result.user };
@@ -93,6 +110,7 @@ export const AuthProvider = ({ children }) => {
 
       if (result.success) {
         localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
         setToken(result.token);
         setUser(result.user);
         return { success: true };
@@ -111,6 +129,7 @@ export const AuthProvider = ({ children }) => {
   // Logout handler
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken('');
     setUser(null);
   };
