@@ -5,7 +5,6 @@ const { protect, authorize } = require('../middleware/auth');
 const { uploadProducts } = require('../config/cloudinary');
 const path = require('path');
 const fs = require('fs');
-
 // Helper to get hex code for colors
 const getColorHex = (name) => {
   const n = name.toLowerCase().trim();

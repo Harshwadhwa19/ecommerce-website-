@@ -6,6 +6,7 @@ import {
   CheckCircle, MapPin, ClipboardList, CreditCard, 
   Upload, QrCode, ShieldAlert, ArrowLeft, Loader2 
 } from 'lucide-react';
+import paymentQr from '../assets/payment_qr.jpg';
 
 const Checkout = () => {
   const { cartItems, totalAmount, totalItems, isMoqMet, clearCart } = useCart();
@@ -14,6 +15,7 @@ const Checkout = () => {
 
   // Active Step: 1 = Shipping, 2 = Summary, 3 = Payment
   const [activeStep, setActiveStep] = useState(1);
+  const [copied, setCopied] = useState(false);
 
   // Form States
   const [storeName, setStoreName] = useState('');
@@ -55,6 +57,12 @@ const Checkout = () => {
       setScreenshot(file);
       setScreenshotPreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText('ramwadhwa13@okicici');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShippingSubmit = (e) => {
@@ -131,11 +139,7 @@ const Checkout = () => {
     }
   };
 
-  // Generate UPI qr details
-  const upiId = '8087351633@okbizaxis';
-  const upiName = 'J G Jeans';
-  const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${totalAmount}&tn=JGWholesaleOrder&cu=INR`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+
 
   return (
     <div className="container" style={styles.container}>
@@ -402,40 +406,55 @@ const Checkout = () => {
                   </div>
                 )}
 
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#0d1160', margin: '0 0 16px 0', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                  STEP 1: SCAN & PAY
+                </h3>
+
                 <div style={styles.paymentFlex}>
                   <div style={styles.qrCard}>
-                    <img src={qrCodeUrl} alt="UPI Payment QR" style={styles.qrImage} />
-                    <div style={styles.qrFooterText}>
-                      <QrCode size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                      Scan QR Code with GPay/PhonePe
-                    </div>
+                    <img src={paymentQr} alt="UPI Payment QR" style={styles.qrImage} />
                   </div>
 
-                  <div style={styles.paymentInfo}>
-                    <p style={{ fontSize: '0.9rem', color: '#475569', lineHeight: '1.6', margin: '0 0 16px 0' }}>
-                      Transfer the exact amount to complete your B2B wholesale order booking.
-                    </p>
-
-                    <div style={styles.detailBadge}>
-                      <span style={styles.detailBadgeLabel}>Merchant Business:</span>
-                      <strong style={styles.detailBadgeValue}>{upiName}</strong>
+                  <div style={styles.paymentInfoWrap}>
+                    <div style={styles.paymentDetailItem}>
+                      <span style={styles.paymentDetailLabel}>UPI ID</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <strong style={styles.paymentDetailValue}>ramwadhwa13@okicici</strong>
+                        <button 
+                          type="button"
+                          onClick={handleCopyUpi} 
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            backgroundColor: copied ? '#10b981' : '#f1f5f9',
+                            color: copied ? '#ffffff' : '#1a237e',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            outline: 'none'
+                          }}
+                        >
+                          {copied ? 'Copied!' : 'Copy UPI ID'}
+                        </button>
+                      </div>
                     </div>
 
-                    <div style={{ ...styles.detailBadge, marginTop: '8px' }}>
-                      <span style={styles.detailBadgeLabel}>UPI ID:</span>
-                      <strong style={styles.detailBadgeValue}>{upiId}</strong>
+                    <div style={{ ...styles.paymentDetailItem, marginTop: '14px' }}>
+                      <span style={styles.paymentDetailLabel}>Account Holder</span>
+                      <strong style={styles.paymentDetailValue}>Ram Wadhwa</strong>
                     </div>
 
-                    <div style={{ marginTop: '16px', backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#0d1160', display: 'block', marginBottom: '4px' }}>
-                        Or Direct Bank Transfer:
-                      </span>
-                      <span style={{ fontSize: '0.8rem', color: '#475569', lineHeight: '1.4' }}>
-                        A/C: <strong>39845762012</strong> (SBI)<br />
-                        IFSC: <strong>SBIN0000123</strong>
-                      </span>
+                    <div style={{ ...styles.paymentDetailItem, marginTop: '14px' }}>
+                      <span style={styles.paymentDetailLabel}>Bank</span>
+                      <strong style={styles.paymentDetailValue}>Kotak Mahindra Bank</strong>
                     </div>
                   </div>
+                </div>
+
+                <div style={{ margin: '20px 0', padding: '12px 16px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', color: '#166534', fontSize: '0.88rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>ℹ️</span> After completing payment, upload the payment screenshot below for verification.
                 </div>
 
                 <div style={styles.screenshotSection}>
@@ -734,36 +753,35 @@ const styles = {
   },
   qrImage: {
     width: '100%',
-    maxWidth: '180px',
-    aspectRatio: '1/1',
+    maxWidth: '220px',
+    height: 'auto',
     display: 'block',
-    margin: '0 auto'
+    margin: '0 auto',
+    borderRadius: '4px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
   },
-  qrFooterText: {
+  paymentInfoWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  paymentDetailItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '4px'
+  },
+  paymentDetailLabel: {
     fontSize: '0.75rem',
     color: '#64748b',
-    marginTop: '10px',
-    fontWeight: '500'
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
-  paymentInfo: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  detailBadge: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '8px 12px',
-    backgroundColor: '#f1f5f9',
-    borderRadius: '4px',
-    fontSize: '0.85rem'
-  },
-  detailBadgeLabel: {
-    color: '#64748b',
-    fontWeight: '500'
-  },
-  detailBadgeValue: {
-    color: '#1e293b',
-    fontFamily: 'monospace'
+  paymentDetailValue: {
+    fontSize: '1rem',
+    color: '#0d1160',
+    fontWeight: '700'
   },
   screenshotSection: {
     marginTop: '24px',

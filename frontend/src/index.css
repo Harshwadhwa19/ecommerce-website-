@@ -460,7 +460,7 @@ button, input, textarea, select {
   height: 18px;
   display: flex;
   align-items: center;
-  justifyContent: center;
+  justify-content: center;
 }
 
 .user-info {
@@ -947,7 +947,7 @@ button, input, textarea, select {
   .item-price-details {
     width: 100%;
     display: flex;
-    justifyContent: space-between;
+    justify-content: space-between;
     align-items: center;
     border-top: 1px dashed var(--border);
     padding-top: 8px;
