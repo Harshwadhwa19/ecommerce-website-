@@ -46,13 +46,19 @@ const Cart = () => {
             <h3 style={styles.cardTitle}>Selected Designs ({cartItems.length} styles)</h3>
             <div style={styles.divider}></div>
             
-            {cartItems.map((item) => (
-              <div key={`${item.product._id}-${item.color}`} style={styles.cartItemRow}>
-                <img 
-                  src={(item.product.images && item.product.images[0]) || 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=150&auto=format&fit=crop'} 
-                  alt={item.product.name} 
-                  style={styles.itemThumbnail}
-                />
+            {cartItems.map((item) => {
+              const colorObj = item.product.colors?.find(c => (typeof c === 'object' ? c.name : c) === item.color);
+              const itemImage = (colorObj && colorObj.images && colorObj.images.length > 0)
+                ? colorObj.images[0]
+                : (item.product.images && item.product.images[0]) || 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=150&auto=format&fit=crop';
+
+              return (
+                <div key={`${item.product._id}-${item.color}`} style={styles.cartItemRow}>
+                  <img 
+                    src={itemImage} 
+                    alt={item.product.name} 
+                    style={styles.itemThumbnail}
+                  />
                 
                 <div style={styles.itemInfo}>
                   <span className="badge badge-brand" style={{ fontSize: '0.7rem', width: 'fit-content' }}>{item.product.brand}</span>
@@ -97,7 +103,7 @@ const Cart = () => {
                   <Trash2 size={18} />
                 </button>
               </div>
-            ))}
+            })}
 
             {/* Cart MOQ Indicators */}
             {!isMoqMet && (

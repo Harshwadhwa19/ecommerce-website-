@@ -77,6 +77,21 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// @desc    Upload multiple images to Cloudinary
+// @route   POST /api/products/upload
+// @access  Private/Admin
+router.post('/upload', protect, authorize('admin'), uploadProducts.array('images', 10), (req, res) => {
+  try {
+    const imageUrls = req.files ? req.files.map(file => file.path) : [];
+    res.status(200).json({
+      success: true,
+      urls: imageUrls
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // @desc    Create a new product
 // @route   POST /api/products
 // @access  Private/Admin
@@ -98,13 +113,15 @@ router.post('/', protect, authorize('admin'), uploadProducts.array('images', 5),
             return {
               name: c.name.trim(),
               hexCode: c.hexCode || getColorHex(c.name),
-              stock: Number(c.stock) || 100
+              stock: Number(c.stock) === 0 ? 0 : (Number(c.stock) || 100),
+              images: Array.isArray(c.images) ? c.images : []
             };
           } else if (typeof c === 'string') {
             return {
               name: c.trim(),
               hexCode: getColorHex(c),
-              stock: 100
+              stock: 100,
+              images: []
             };
           }
           return c;
@@ -113,7 +130,8 @@ router.post('/', protect, authorize('admin'), uploadProducts.array('images', 5),
         parsedColors = rawColors.split(',').map(c => c.trim()).filter(Boolean).map(cName => ({
           name: cName,
           hexCode: getColorHex(cName),
-          stock: 100
+          stock: 100,
+          images: []
         }));
       }
     }
@@ -162,13 +180,15 @@ router.put('/:id', protect, authorize('admin'), uploadProducts.array('images', 5
             return {
               name: c.name.trim(),
               hexCode: c.hexCode || getColorHex(c.name),
-              stock: Number(c.stock) || 100
+              stock: Number(c.stock) === 0 ? 0 : (Number(c.stock) || 100),
+              images: Array.isArray(c.images) ? c.images : []
             };
           } else if (typeof c === 'string') {
             return {
               name: c.trim(),
               hexCode: getColorHex(c),
-              stock: 100
+              stock: 100,
+              images: []
             };
           }
           return c;
@@ -177,7 +197,8 @@ router.put('/:id', protect, authorize('admin'), uploadProducts.array('images', 5
         parsedColors = rawColors.split(',').map(c => c.trim()).filter(Boolean).map(cName => ({
           name: cName,
           hexCode: getColorHex(cName),
-          stock: 100
+          stock: 100,
+          images: []
         }));
       }
     }

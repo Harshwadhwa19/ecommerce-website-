@@ -18,6 +18,27 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [bundleQty, setBundleQty] = useState(10);
   const [addedMessage, setAddedMessage] = useState(false);
+  const [activeImage, setActiveImage] = useState('');
+
+  const getSelectedColorImages = () => {
+    if (!product) return [];
+    const colorObj = product.colors.find(c => (typeof c === 'object' ? c.name : c) === selectedColor);
+    if (colorObj && colorObj.images && colorObj.images.length > 0) {
+      return colorObj.images;
+    }
+    return product.images && product.images.length > 0 ? product.images : [];
+  };
+
+  useEffect(() => {
+    if (product) {
+      const images = getSelectedColorImages();
+      if (images.length > 0) {
+        setActiveImage(images[0]);
+      } else {
+        setActiveImage('https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&auto=format&fit=crop');
+      }
+    }
+  }, [selectedColor, product]);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -88,10 +109,6 @@ const ProductDetail = () => {
   const piecesPerBundle = product.piecesPerBundle || 5;
   const totalPieces = bundleQty * piecesPerBundle;
   const isQuantityBelowMOQ = totalPieces < product.moq;
-  const displayImage = product.images && product.images.length > 0 
-    ? product.images[0] 
-    : 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&auto=format&fit=crop';
-
   return (
     <div className="container" style={{ padding: '110px 24px 40px 24px' }}>
       {/* Back Button */}
@@ -104,7 +121,7 @@ const ProductDetail = () => {
         <div style={styles.imageCol}>
           <div style={styles.imageCard}>
             <img 
-              src={displayImage} 
+              src={activeImage} 
               alt={product.name} 
               style={styles.mainImage}
               onError={(e) => {
@@ -112,6 +129,29 @@ const ProductDetail = () => {
                 e.target.src = 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&auto=format&fit=crop';
               }}
             />
+            
+            {/* Thumbnail Gallery */}
+            {getSelectedColorImages().length > 1 && (
+              <div style={styles.thumbnailRow}>
+                {getSelectedColorImages().map((imgUrl, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => setActiveImage(imgUrl)}
+                    style={{
+                      ...styles.thumbnailWrap,
+                      borderColor: activeImage === imgUrl ? '#e2b04a' : '#cbd5e1',
+                      borderWidth: activeImage === imgUrl ? '2px' : '1px'
+                    }}
+                  >
+                    <img 
+                      src={imgUrl} 
+                      alt={`${product.name} gallery ${idx + 1}`} 
+                      style={styles.thumbnailImg}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -323,6 +363,28 @@ const styles = {
     width: '100%',
     borderRadius: '8px',
     aspectRatio: '3/4',
+    objectFit: 'cover'
+  },
+  thumbnailRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginTop: '12px',
+    justifyContent: 'center'
+  },
+  thumbnailWrap: {
+    width: '60px',
+    height: '80px',
+    borderRadius: '6px',
+    overflow: 'hidden',
+    cursor: 'pointer',
+    borderStyle: 'solid',
+    transition: 'all 0.2s ease',
+    boxSizing: 'border-box'
+  },
+  thumbnailImg: {
+    width: '100%',
+    height: '100%',
     objectFit: 'cover'
   },
   infoCol: {

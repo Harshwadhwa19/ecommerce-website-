@@ -38,7 +38,8 @@ const ProductSchema = new mongoose.Schema({
     {
       name: { type: String, required: true },
       hexCode: { type: String, default: '#000000' },
-      stock: { type: Number, default: 100 }
+      stock: { type: Number, default: 100 },
+      images: { type: [String], default: [] }
     }
   ],
   images: {

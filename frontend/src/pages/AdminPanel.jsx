@@ -41,8 +41,8 @@ const AdminPanel = () => {
   const [newProdMoq, setNewProdMoq] = useState(50);
   const [newProdSizes, setNewProdSizes] = useState('28, 30, 32, 34, 36');
   const [newProdColors, setNewProdColors] = useState([
-    { name: 'Indigo Blue', stock: 100 },
-    { name: 'Jet Black', stock: 100 }
+    { name: 'Indigo Blue', hexCode: '#2e5894', stock: 100, images: [] },
+    { name: 'Jet Black', hexCode: '#111111', stock: 100, images: [] }
   ]);
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImage, setNewProdImage] = useState(null);
@@ -209,7 +209,7 @@ const AdminPanel = () => {
 
   // Product Creation color handlers
   const handleAddColorField = () => {
-    setNewProdColors([...newProdColors, { name: '', stock: 100 }]);
+    setNewProdColors([...newProdColors, { name: '', hexCode: '#000000', stock: 100, images: [] }]);
   };
 
   const handleRemoveColorField = (index) => {
@@ -220,6 +220,46 @@ const AdminPanel = () => {
     setNewProdColors(newProdColors.map((c, idx) => {
       if (idx === index) {
         return { ...c, [field]: field === 'stock' ? Number(value) : value };
+      }
+      return c;
+    }));
+  };
+
+  const handleUploadColorImages = async (index, files) => {
+    if (!files || files.length === 0) return;
+    
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
+    }
+    
+    try {
+      const response = await fetch('/api/products/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const result = await response.json();
+      if (result.success) {
+        setNewProdColors(newProdColors.map((c, idx) => {
+          if (idx === index) {
+            return { ...c, images: [...(c.images || []), ...result.urls] };
+          }
+          return c;
+        }));
+      } else {
+        alert(result.error || 'Failed to upload images');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to connect to the server for image upload.');
+    }
+  };
+
+  const handleRemoveColorImage = (colorIndex, imgIndex) => {
+    setNewProdColors(newProdColors.map((c, idx) => {
+      if (idx === colorIndex) {
+        return { ...c, images: c.images.filter((_, iIdx) => iIdx !== imgIndex) };
       }
       return c;
     }));
@@ -275,8 +315,8 @@ const AdminPanel = () => {
         setNewProdDesc('');
         setNewProdImage(null);
         setNewProdColors([
-          { name: 'Indigo Blue', stock: 100 },
-          { name: 'Jet Black', stock: 100 }
+          { name: 'Indigo Blue', hexCode: '#2e5894', stock: 100, images: [] },
+          { name: 'Jet Black', hexCode: '#111111', stock: 100, images: [] }
         ]);
         fetchProducts();
       } else {
@@ -299,7 +339,7 @@ const AdminPanel = () => {
     setEditPiecesPerBundle(product.piecesPerBundle || 5);
     setEditMoq(product.moq || 50);
     setEditSizes(product.sizes ? product.sizes.join(', ') : '28, 30, 32, 34, 36');
-    setEditColors(product.colors ? product.colors.map(c => ({ name: c.name, stock: c.stock })) : []);
+    setEditColors(product.colors ? product.colors.map(c => ({ name: c.name, hexCode: c.hexCode || '#000000', stock: c.stock, images: c.images || [] })) : []);
     setEditDesc(product.description || '');
     setEditInStock(product.inStock !== false);
     setEditImage(null);
@@ -307,7 +347,7 @@ const AdminPanel = () => {
 
   // Edit Product color handlers
   const handleAddEditColorField = () => {
-    setEditColors([...editColors, { name: '', stock: 100 }]);
+    setEditColors([...editColors, { name: '', hexCode: '#000000', stock: 100, images: [] }]);
   };
 
   const handleRemoveEditColorField = (index) => {
@@ -318,6 +358,46 @@ const AdminPanel = () => {
     setEditColors(editColors.map((c, idx) => {
       if (idx === index) {
         return { ...c, [field]: field === 'stock' ? Number(value) : value };
+      }
+      return c;
+    }));
+  };
+
+  const handleUploadEditColorImages = async (index, files) => {
+    if (!files || files.length === 0) return;
+    
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
+    }
+    
+    try {
+      const response = await fetch('/api/products/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const result = await response.json();
+      if (result.success) {
+        setEditColors(editColors.map((c, idx) => {
+          if (idx === index) {
+            return { ...c, images: [...(c.images || []), ...result.urls] };
+          }
+          return c;
+        }));
+      } else {
+        alert(result.error || 'Failed to upload images');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to connect to the server for image upload.');
+    }
+  };
+
+  const handleRemoveEditColorImage = (colorIndex, imgIndex) => {
+    setEditColors(editColors.map((c, idx) => {
+      if (idx === colorIndex) {
+        return { ...c, images: c.images.filter((_, iIdx) => iIdx !== imgIndex) };
       }
       return c;
     }));
@@ -814,32 +894,120 @@ const AdminPanel = () => {
                     </div>
                     
                     {newProdColors.map((color, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                        <input 
-                          type="text"
-                          style={{ ...styles.formInput, flex: 2, padding: '6px 10px', fontSize: '0.8rem' }}
-                          placeholder="Color name (e.g. Ice Blue)"
-                          value={color.name}
-                          onChange={(e) => handleColorChange(idx, 'name', e.target.value)}
-                          required
-                        />
-                        <input 
-                          type="number"
-                          style={{ ...styles.formInput, flex: 1, padding: '6px 10px', fontSize: '0.8rem' }}
-                          placeholder="Stock"
-                          value={color.stock}
-                          onChange={(e) => handleColorChange(idx, 'stock', e.target.value)}
-                          required
-                        />
-                        {newProdColors.length > 1 && (
-                          <button 
-                            type="button" 
-                            onClick={() => handleRemoveColorField(idx)}
-                            style={{ padding: '6px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
+                      <div key={idx} style={{
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        marginBottom: '12px',
+                        backgroundColor: '#ffffff'
+                      }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
+                          <input 
+                            type="text"
+                            style={{ ...styles.formInput, flex: 2, padding: '6px 10px', fontSize: '0.8rem' }}
+                            placeholder="Color name (e.g. Ice Blue)"
+                            value={color.name}
+                            onChange={(e) => handleColorChange(idx, 'name', e.target.value)}
+                            required
+                          />
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1.5 }}>
+                            <input 
+                              type="color"
+                              style={{ width: '28px', height: '28px', padding: 0, border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+                              value={color.hexCode || '#000000'}
+                              onChange={(e) => handleColorChange(idx, 'hexCode', e.target.value)}
+                            />
+                            <input 
+                              type="text"
+                              style={{ ...styles.formInput, padding: '6px 8px', fontSize: '0.8rem', width: '100%', fontFamily: 'monospace' }}
+                              placeholder="#Hex"
+                              value={color.hexCode || ''}
+                              onChange={(e) => handleColorChange(idx, 'hexCode', e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <input 
+                            type="number"
+                            style={{ ...styles.formInput, flex: 1, padding: '6px 10px', fontSize: '0.8rem' }}
+                            placeholder="Stock"
+                            value={color.stock}
+                            onChange={(e) => handleColorChange(idx, 'stock', e.target.value)}
+                            required
+                          />
+                          {newProdColors.length > 1 && (
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemoveColorField(idx)}
+                              style={{ padding: '6px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Variant Images Row */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Variant Images (Multiple):</span>
+                            <label style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px 8px',
+                              backgroundColor: '#f1f5f9',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              color: '#475569'
+                            }}>
+                              <Upload size={10} /> Choose & Upload
+                              <input 
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={(e) => handleUploadColorImages(idx, e.target.files)}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Uploaded Images List */}
+                          {color.images && color.images.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                              {color.images.map((imgUrl, imgIdx) => (
+                                <div key={imgIdx} style={{ position: 'relative', width: '50px', height: '60px', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
+                                  <img src={imgUrl} alt="Variant" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleRemoveColorImage(idx, imgIdx)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '2px',
+                                      right: '2px',
+                                      backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '50%',
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      padding: 0
+                                    }}
+                                  >
+                                    <X size={8} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1130,34 +1298,122 @@ const AdminPanel = () => {
                   </button>
                 </div>
                 
-                <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
+                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                   {editColors.map((color, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                      <input 
-                        type="text"
-                        style={{ ...styles.formInput, flex: 2, padding: '6px 10px', fontSize: '0.8rem' }}
-                        placeholder="Color name"
-                        value={color.name}
-                        onChange={(e) => handleEditColorChange(idx, 'name', e.target.value)}
-                        required
-                      />
-                      <input 
-                        type="number"
-                        style={{ ...styles.formInput, flex: 1, padding: '6px 10px', fontSize: '0.8rem' }}
-                        placeholder="Stock"
-                        value={color.stock}
-                        onChange={(e) => handleEditColorChange(idx, 'stock', e.target.value)}
-                        required
-                      />
-                      {editColors.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => handleRemoveEditColorField(idx)}
-                          style={{ padding: '6px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                    <div key={idx} style={{
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '12px',
+                      marginBottom: '12px',
+                      backgroundColor: '#ffffff'
+                    }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
+                        <input 
+                          type="text"
+                          style={{ ...styles.formInput, flex: 2, padding: '6px 10px', fontSize: '0.8rem' }}
+                          placeholder="Color name"
+                          value={color.name}
+                          onChange={(e) => handleEditColorChange(idx, 'name', e.target.value)}
+                          required
+                        />
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1.5 }}>
+                          <input 
+                            type="color"
+                            style={{ width: '28px', height: '28px', padding: 0, border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}
+                            value={color.hexCode || '#000000'}
+                            onChange={(e) => handleEditColorChange(idx, 'hexCode', e.target.value)}
+                          />
+                          <input 
+                            type="text"
+                            style={{ ...styles.formInput, padding: '6px 8px', fontSize: '0.8rem', width: '100%', fontFamily: 'monospace' }}
+                            placeholder="#Hex"
+                            value={color.hexCode || ''}
+                            onChange={(e) => handleEditColorChange(idx, 'hexCode', e.target.value)}
+                            required
+                          />
+                        </div>
+
+                        <input 
+                          type="number"
+                          style={{ ...styles.formInput, flex: 1, padding: '6px 10px', fontSize: '0.8rem' }}
+                          placeholder="Stock"
+                          value={color.stock}
+                          onChange={(e) => handleEditColorChange(idx, 'stock', e.target.value)}
+                          required
+                        />
+                        {editColors.length > 1 && (
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveEditColorField(idx)}
+                            style={{ padding: '6px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Variant Images Row */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Variant Images (Multiple):</span>
+                          <label style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 8px',
+                            backgroundColor: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            color: '#475569'
+                          }}>
+                            <Upload size={10} /> Choose & Upload
+                            <input 
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={(e) => handleUploadEditColorImages(idx, e.target.files)}
+                              style={{ display: 'none' }}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Uploaded Images List */}
+                        {color.images && color.images.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                            {color.images.map((imgUrl, imgIdx) => (
+                              <div key={imgIdx} style={{ position: 'relative', width: '50px', height: '60px', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
+                                <img src={imgUrl} alt="Variant" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <button 
+                                  type="button"
+                                  onClick={() => handleRemoveEditColorImage(idx, imgIdx)}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '2px',
+                                    right: '2px',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '14px',
+                                    height: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    padding: 0
+                                  }}
+                                >
+                                  <X size={8} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -314,13 +314,19 @@ const Checkout = () => {
             {activeStep === 2 && (
               <div style={styles.stepBody}>
                 <div style={styles.summaryList}>
-                  {cartItems.map((item) => (
-                    <div key={`${item.product._id}-${item.color}`} style={styles.summaryItemRow}>
-                      <img 
-                        src={(item.product.images && item.product.images[0]) || 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=100&auto=format&fit=crop'} 
-                        alt={item.product.name} 
-                        style={styles.summaryItemImg}
-                      />
+                  {cartItems.map((item) => {
+                    const colorObj = item.product.colors?.find(c => (typeof c === 'object' ? c.name : c) === item.color);
+                    const itemImage = (colorObj && colorObj.images && colorObj.images.length > 0)
+                      ? colorObj.images[0]
+                      : (item.product.images && item.product.images[0]) || 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=100&auto=format&fit=crop';
+
+                    return (
+                      <div key={`${item.product._id}-${item.color}`} style={styles.summaryItemRow}>
+                        <img 
+                          src={itemImage} 
+                          alt={item.product.name} 
+                          style={styles.summaryItemImg}
+                        />
                       <div style={{ flexGrow: 1 }}>
                         <div style={styles.summaryItemTitle}>{item.product.name}</div>
                         <div style={styles.summaryItemSubtitle}>
@@ -337,7 +343,7 @@ const Checkout = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
 
                 <div style={styles.totalSumBlock}>
