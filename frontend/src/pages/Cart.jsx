@@ -39,7 +39,7 @@ const Cart = () => {
         <p>Review selected designs, verify bundle MOQ limits, and proceed to shipping details</p>
       </div>
 
-      <div style={styles.cartLayout}>
+      <div className="cart-layout">
         {/* Left Side: Cart Items List */}
         <div style={styles.cartItemsCol}>
           <div style={styles.card}>
@@ -53,53 +53,57 @@ const Cart = () => {
                 : (item.product.images && item.product.images[0]) || 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=150&auto=format&fit=crop';
 
               return (
-                <div key={`${item.product._id}-${item.color}`} style={styles.cartItemRow}>
+                <div key={`${item.product._id}-${item.color}`} className="cart-item-row">
                   <img 
                     src={itemImage} 
                     alt={item.product.name} 
-                    style={styles.itemThumbnail}
+                    className="item-thumbnail"
                   />
                 
-                <div style={styles.itemInfo}>
+                <div className="item-details">
                   <span className="badge badge-brand" style={{ fontSize: '0.7rem', width: 'fit-content' }}>{item.product.brand}</span>
-                  <h4 style={styles.itemTitle}>{item.product.name}</h4>
-                  <div style={styles.itemMetaInfo}>
+                  <h4 className="item-title">{item.product.name}</h4>
+                  <div className="item-meta-info">
                     <span>Color: <strong>{item.color}</strong></span>
-                    <span style={styles.metaDot}>•</span>
+                    <span style={{ margin: '0 8px', color: '#cbd5e1' }}>•</span>
                     <span>Pieces Per Bundle: <strong>{item.piecesPerBundle || 5} pcs</strong></span>
-                    <span style={styles.metaDot}>•</span>
+                    <span style={{ margin: '0 8px', color: '#cbd5e1' }}>•</span>
                     <span>Total Pieces: <strong>{item.bundleQty * (item.piecesPerBundle || 5)} pcs</strong></span>
                   </div>
                 </div>
 
-                <div style={styles.qtyControls}>
-                  <button 
-                    onClick={() => updateQuantity(item.product._id, item.color, Math.max(1, item.bundleQty - 1))}
-                    style={styles.qtyBtn}
-                  >
-                    -
-                  </button>
-                  <div style={styles.qtyDisplay}>
-                    <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{item.bundleQty} {item.bundleQty === 1 ? 'bundle' : 'bundles'}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>({item.bundleQty * item.piecesPerBundle} pcs)</div>
+                <div className="qty-selector-wrap">
+                  <div className="qty-controls">
+                    <button 
+                      onClick={() => updateQuantity(item.product._id, item.color, Math.max(1, item.bundleQty - 1))}
+                      className="qty-btn"
+                    >
+                      -
+                    </button>
+                    <div className="qty-num-display">
+                      {item.bundleQty}
+                    </div>
+                    <button 
+                      onClick={() => updateQuantity(item.product._id, item.color, item.bundleQty + 1)}
+                      className="qty-btn"
+                    >
+                      +
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => updateQuantity(item.product._id, item.color, item.bundleQty + 1)}
-                    style={styles.qtyBtn}
-                  >
-                    +
-                  </button>
+                  <div className="qty-pieces-subtext">
+                    ({item.bundleQty * (item.piecesPerBundle || 5)} pcs)
+                  </div>
                 </div>
 
-                <div style={styles.priceColumn}>
+                <div className="item-price-details">
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>₹{item.pricePerPiece}/pc</span>
-                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block' }}>₹{item.pricePerPiece * item.piecesPerBundle}/bundle</span>
-                  <div style={styles.subtotalValue}>₹{item.totalPrice.toLocaleString('en-IN')}</div>
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block' }}>₹{item.pricePerPiece * (item.piecesPerBundle || 5)}/bundle</span>
+                  <div className="item-subtotal-val">₹{item.totalPrice.toLocaleString('en-IN')}</div>
                 </div>
 
                 <button 
                   onClick={() => removeFromCart(item.product._id, item.color)}
-                  style={styles.deleteBtn}
+                  className="item-delete-btn"
                   title="Remove Item"
                 >
                   <Trash2 size={18} />
@@ -249,96 +253,6 @@ const styles = {
     height: '1px',
     backgroundColor: '#f1f5f9',
     margin: '12px 0 20px 0'
-  },
-  cartItemRow: {
-    display: 'flex',
-    gap: '20px',
-    padding: '20px 0',
-    borderBottom: '1px solid #f1f5f9',
-    alignItems: 'center'
-  },
-  itemThumbnail: {
-    width: '70px',
-    height: '90px',
-    objectFit: 'cover',
-    borderRadius: '4px',
-    border: '1px solid #e2e8f0',
-    flexShrink: 0
-  },
-  itemInfo: {
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px'
-  },
-  itemTitle: {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#0d1160',
-    margin: '4px 0 0 0'
-  },
-  itemMetaInfo: {
-    fontSize: '0.82rem',
-    color: '#64748b'
-  },
-  metaDot: {
-    margin: '0 8px',
-    color: '#cbd5e1'
-  },
-  qtyControls: {
-    display: 'flex',
-    alignItems: 'center',
-    border: '1px solid #cbd5e1',
-    borderRadius: '4px',
-    overflow: 'hidden'
-  },
-  qtyBtn: {
-    padding: '8px 12px',
-    border: 'none',
-    backgroundColor: '#f1f5f9',
-    fontWeight: '700',
-    cursor: 'pointer',
-    color: '#0d1160'
-  },
-  qtyDisplay: {
-    padding: '4px 8px',
-    textAlign: 'center',
-    minWidth: '90px',
-    backgroundColor: '#ffffff'
-  },
-  priceColumn: {
-    textAlign: 'right',
-    minWidth: '130px'
-  },
-  subtotalValue: {
-    fontSize: '1.1rem',
-    fontWeight: '800',
-    color: '#1a237e',
-    marginTop: '4px'
-  },
-  deleteBtn: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    color: '#94a3b8',
-    cursor: 'pointer',
-    padding: '8px',
-    borderRadius: '4px',
-    transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ':hover': {
-      color: '#ef4444',
-      backgroundColor: '#fee2e2'
-    }
-  },
-  moqWarningBox: {
-    backgroundColor: '#fffbeb',
-    border: '1px solid #fde68a',
-    borderRadius: '4px',
-    padding: '16px',
-    marginTop: '20px',
-    color: '#78350f'
   },
   priceRow: {
     display: 'flex',
