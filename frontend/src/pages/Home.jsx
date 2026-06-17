@@ -284,12 +284,25 @@ const Home = () => {
 
             <div style={s.contactCard}>
               <div style={s.contactIconBox}><PhoneCall size={22} /></div>
-              <h4 style={s.contactCardTitle}>Call / WhatsApp</h4>
-              <p style={s.contactCardText}>
-                <a href="tel:8087351633" style={s.contactLink}>8087351633</a><br />
-                <a href="tel:9623018183" style={s.contactLink}>9623018183</a><br />
-                <a href="tel:9324537061" style={s.contactLink}>9324537061</a>
-              </p>
+              <h4 style={s.contactCardTitle}>CONTACT INFORMATION</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', textAlign: 'left' }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>📞 Primary Sales & Order Support</span>
+                  <a href="tel:8087351633" style={s.contactLink}>8087351633</a>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>📞 Alternate Contact 1</span>
+                  <a href="tel:9623018183" style={s.contactLink}>9623018183</a>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>📞 Alternate Contact 2</span>
+                  <a href="tel:9324537061" style={s.contactLink}>9324537061</a>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>📧 Business Email</span>
+                  <a href="mailto:j.g.jeans0@gmail.com" style={s.contactLink}>j.g.jeans0@gmail.com</a>
+                </div>
+              </div>
               <a
                 href="https://wa.me/918087351633?text=Hi, I want to place a wholesale order"
                 target="_blank"

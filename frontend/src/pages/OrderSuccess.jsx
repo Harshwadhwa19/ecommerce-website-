@@ -44,6 +44,16 @@ const OrderSuccess = () => {
         <p style={styles.thankyouText}>Thank you for choosing J.G. Jeans Wholesale.</p>
         <p style={styles.nextStepsText}>Our team will verify your payment and contact you shortly.</p>
 
+        <div style={styles.supportBox}>
+          <span style={styles.supportTitle}>Primary Sales & Order Support</span>
+          <div style={styles.supportDetail}>
+            📞 <a href="tel:8087351633" style={styles.supportLink}>8087351633</a>
+          </div>
+          <div style={styles.supportDetail}>
+            📧 <a href="mailto:j.g.jeans0@gmail.com" style={styles.supportLink}>j.g.jeans0@gmail.com</a>
+          </div>
+        </div>
+
         {/* Action Buttons */}
         <div style={styles.actionButtons}>
           <Link to="/catalogue" className="btn btn-primary" style={styles.btnShop}>
@@ -151,6 +161,30 @@ const styles = {
     backgroundColor: '#f1f5f9',
     color: '#475569',
     border: '1px solid #cbd5e1'
+  },
+  supportBox: {
+    backgroundColor: '#fffbeb',
+    border: '1px solid #fde68a',
+    borderRadius: '4px',
+    padding: '12px 16px',
+    marginBottom: '24px',
+    fontSize: '0.85rem',
+    textAlign: 'left'
+  },
+  supportTitle: {
+    fontWeight: '700',
+    color: '#78350f',
+    display: 'block',
+    marginBottom: '6px'
+  },
+  supportDetail: {
+    color: '#78350f',
+    margin: '3px 0'
+  },
+  supportLink: {
+    color: '#1a237e',
+    fontWeight: '700',
+    textDecoration: 'underline'
   }
 };
 

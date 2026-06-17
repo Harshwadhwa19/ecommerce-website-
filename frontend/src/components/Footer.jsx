@@ -65,12 +65,26 @@ const Footer = () => {
                 Ulhasnagar – 421 005
               </span>
             </div>
-            <div style={s.contactItem}>
-              <Phone size={14} style={s.contactIcon} />
-              <div>
-                {['8087351633', '9623018183', '9324537061'].map(n => (
-                  <a key={n} href={`tel:${n}`} style={s.phoneLink}>{n}</a>
-                ))}
+            <div style={{ ...s.contactItem, flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <Phone size={14} style={s.contactIcon} />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.65rem', color: '#e2b04a', fontWeight: 'bold', textTransform: 'uppercase' }}>Primary Support</span>
+                  <a href="tel:8087351633" style={s.phoneLink}>8087351633</a>
+                  
+                  <span style={{ fontSize: '0.65rem', color: '#e2b04a', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '6px' }}>Alt Contact 1</span>
+                  <a href="tel:9623018183" style={s.phoneLink}>9623018183</a>
+                  
+                  <span style={{ fontSize: '0.65rem', color: '#e2b04a', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '6px' }}>Alt Contact 2</span>
+                  <a href="tel:9324537061" style={s.phoneLink}>9324537061</a>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginTop: '6px' }}>
+                <span style={{ color: '#e2b04a', fontSize: '12px', display: 'inline-flex', marginTop: '1px' }}>✉</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.65rem', color: '#e2b04a', fontWeight: 'bold', textTransform: 'uppercase' }}>Business Email</span>
+                  <a href="mailto:j.g.jeans0@gmail.com" style={s.phoneLink}>j.g.jeans0@gmail.com</a>
+                </div>
               </div>
             </div>
           </div>

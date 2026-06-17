@@ -172,8 +172,8 @@ const MyOrders = () => {
                       <XCircle size={24} />
                       <div>
                         <strong>Order Rejected</strong>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem' }}>
-                          There was an issue verifying your payment. Please contact sales helpline: 8087351633.
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', lineHeight: '1.4' }}>
+                          There was an issue verifying your payment. Please contact sales helpline: <a href="tel:8087351633" style={{ fontWeight: '700', textDecoration: 'underline', color: 'inherit' }}>8087351633</a> or email <a href="mailto:j.g.jeans0@gmail.com" style={{ fontWeight: '700', textDecoration: 'underline', color: 'inherit' }}>j.g.jeans0@gmail.com</a>.
                         </p>
                       </div>
                     </div>
