@@ -4,7 +4,8 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { 
   CheckCircle, MapPin, ClipboardList, CreditCard, 
-  Upload, QrCode, ShieldAlert, ArrowLeft, Loader2 
+  Upload, QrCode, ShieldAlert, ArrowLeft, Loader2,
+  Smartphone
 } from 'lucide-react';
 import paymentQr from '../assets/payment_qr.jpg';
 
@@ -16,6 +17,8 @@ const Checkout = () => {
   // Active Step: 1 = Shipping, 2 = Summary, 3 = Payment
   const [activeStep, setActiveStep] = useState(1);
   const [copied, setCopied] = useState(false);
+
+  const upiLink = `upi://pay?pa=ramwadhwa13@okicici&pn=${encodeURIComponent('Ram Wadhwa')}&am=${totalAmount}&cu=INR`;
 
   // Form States
   const [storeName, setStoreName] = useState('');
@@ -450,6 +453,19 @@ const Checkout = () => {
                       <span style={styles.paymentDetailLabel}>Bank</span>
                       <strong style={styles.paymentDetailValue}>Kotak Mahindra Bank</strong>
                     </div>
+
+                    <div style={{ marginTop: '18px' }}>
+                      <a 
+                        href={upiLink} 
+                        style={styles.payUpiBtn}
+                      >
+                        <Smartphone size={16} style={{ marginRight: '6px' }} />
+                        Pay ₹{totalAmount.toLocaleString('en-IN')}
+                      </a>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '6px', display: 'block', lineHeight: '1.4' }}>
+                        (Clicking opens Google Pay, PhonePe, Paytm, or any UPI app on your mobile device with details prefilled)
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -782,6 +798,25 @@ const styles = {
     fontSize: '1rem',
     color: '#0d1160',
     fontWeight: '700'
+  },
+  payUpiBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10b981',
+    color: '#ffffff',
+    padding: '12px 20px',
+    borderRadius: '6px',
+    fontWeight: '700',
+    fontSize: '0.95rem',
+    textDecoration: 'none',
+    textAlign: 'center',
+    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)',
+    transition: 'all 0.2s ease',
+    border: 'none',
+    cursor: 'pointer',
+    width: '100%',
+    boxSizing: 'border-box'
   },
   screenshotSection: {
     marginTop: '24px',
