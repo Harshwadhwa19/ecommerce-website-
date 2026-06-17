@@ -103,7 +103,7 @@ const Cart = () => {
                   <Trash2 size={18} />
                 </button>
               </div>
-            })}
+            )})}
 
             {/* Cart MOQ Indicators */}
             {!isMoqMet && (
