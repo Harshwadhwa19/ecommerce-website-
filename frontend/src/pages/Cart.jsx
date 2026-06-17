@@ -74,10 +74,10 @@ const Cart = () => {
 
                 <div style={styles.qtyControls}>
                   <button 
-                    onClick={() => updateQuantity(item.product._id, item.color, item.bundleQty - 1)}
+                    onClick={() => updateQuantity(item.product._id, item.color, Math.max(1, item.bundleQty - 1))}
                     style={styles.qtyBtn}
                   >
-                    -1
+                    -
                   </button>
                   <div style={styles.qtyDisplay}>
                     <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{item.bundleQty} {item.bundleQty === 1 ? 'bundle' : 'bundles'}</div>
@@ -87,7 +87,7 @@ const Cart = () => {
                     onClick={() => updateQuantity(item.product._id, item.color, item.bundleQty + 1)}
                     style={styles.qtyBtn}
                   >
-                    +1
+                    +
                   </button>
                 </div>
 
